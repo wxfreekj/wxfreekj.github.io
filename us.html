@@ -36,9 +36,18 @@
       box-sizing: border-box;
     }
 
-    .card {
+    /* New wrapper around card + image so we can position the image relative to the card */
+    .card-wrap {
+      position: relative;
       width: 100%;
       max-width: var(--w);
+      display: block;
+      /* keep same centering as .card had implicitly */
+    }
+
+    /* the card itself (kept mostly unchanged) */
+    .card {
+      width: 100%;
       background: linear-gradient(145deg, rgba(15,23,42,0.98), rgba(15,23,42,0.94));
       border-radius: 18px;
       padding: 28px 24px 24px;
@@ -47,6 +56,7 @@
         0 0 0 1px rgba(248,250,252,0.03);
       position: relative;
       overflow: hidden;
+      z-index: 1; /* make sure the card sits beneath the image if image overlaps */
     }
 
     .card::before {
@@ -58,6 +68,20 @@
         radial-gradient(circle at bottom center, rgba(56,189,248,0.12), transparent 55%);
       opacity: 0.9;
       pointer-events: none;
+    }
+
+    /* the image that sits above the card, bottom edge aligned to top of the card */
+    .us-pic {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 100%; /* bottom of image aligns with top of .card */
+      z-index: 2;
+      pointer-events: none; /* don't block clicks */
+      max-width: 420px;     /* tweak this to taste */
+      width: min(48%, 360px); /* responsive */
+      margin-bottom: 0;     /* exact flush; set negative if you want overlap */
+      filter: drop-shadow(0 10px 30px rgba(0,0,0,0.45));
     }
 
     .card-inner {
@@ -230,57 +254,67 @@
         min-width: 76px;
         padding: 12px 10px 10px;
       }
+      .us-pic {
+        width: min(60%, 240px);
+        max-width: 320px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card" role="region" aria-labelledby="countdownHeading">
-      <div class="card-inner">
-        <div class="header-row">
-          <div class="title-block">
-            <h1 id="countdownHeading">
-              <span class="highlight">Jen’s Omaha Landing</span> Countdown
-            </h1>
-            <p class="lead">
-              Every moment between now and <strong>11/19/2025 at 5:12&nbsp;AM (CT)</strong>
-              is just time the universe is using to line things up so that
-              <strong>Jen</strong> steps off that plane and into your arms in Omaha.
-            </p>
-          </div>
-          <div class="heart" aria-hidden="true"></div>
-        </div>
+    <!-- New wrapper: contains image and card so image can be positioned relative to the card -->
+    <div class="card-wrap">
+      <!-- Put your PNG here. Path is relative to this HTML file. -->
+      <img class="us-pic" src="us.png" alt="Us together">
 
-        <div id="timer" class="timer" aria-live="polite">
-          <div class="unit" title="Days until Jen lands">
-            <div id="days" class="value">—</div>
-            <div class="label">Days</div>
+      <div class="card" role="region" aria-labelledby="countdownHeading">
+        <div class="card-inner">
+          <div class="header-row">
+            <div class="title-block">
+              <h1 id="countdownHeading">
+                <span class="highlight">Jen’s Omaha Landing</span> Countdown
+              </h1>
+              <p class="lead">
+                Every moment between now and <strong>11/19/2025 at 5:12&nbsp;AM (CT)</strong>
+                is just time the universe is using to line things up so that
+                <strong>Jen</strong> steps off that plane and into your arms in Omaha.
+              </p>
+            </div>
+            <div class="heart" aria-hidden="true"></div>
           </div>
-          <div class="unit" title="Hours until Jen lands">
-            <div id="hours" class="value">—</div>
-            <div class="label">Hours</div>
-          </div>
-          <div class="unit" title="Minutes until Jen lands">
-            <div id="minutes" class="value">—</div>
-            <div class="label">Minutes</div>
-          </div>
-          <div class="unit" title="Seconds until Jen lands">
-            <div id="seconds" class="value">—</div>
-            <div class="label">Seconds</div>
-          </div>
-        </div>
 
-        <div id="message" class="note" aria-hidden="false"></div>
-        <div id="finished" class="finished" style="display:none">
-          She’s here. Jen has landed in Omaha. 💗
-        </div>
-        <div id="finished-sub" class="finished-sub" style="display:none">
-          No more counting down — just holding, breathing, and finally being in the same place.
-        </div>
+          <div id="timer" class="timer" aria-live="polite">
+            <div class="unit" title="Days until Jen lands">
+              <div id="days" class="value">—</div>
+              <div class="label">Days</div>
+            </div>
+            <div class="unit" title="Hours until Jen lands">
+              <div id="hours" class="value">—</div>
+              <div class="label">Hours</div>
+            </div>
+            <div class="unit" title="Minutes until Jen lands">
+              <div id="minutes" class="value">—</div>
+              <div class="label">Minutes</div>
+            </div>
+            <div class="unit" title="Seconds until Jen lands">
+              <div id="seconds" class="value">—</div>
+              <div class="label">Seconds</div>
+            </div>
+          </div>
 
-        <div class="tiny">
-          Target time is calculated in <span>America/Chicago (UTC-06:00)</span> for
-          <span>Nov&nbsp;19,&nbsp;2025&nbsp;at&nbsp;05:12</span>.
+          <div id="message" class="note" aria-hidden="false"></div>
+          <div id="finished" class="finished" style="display:none">
+            She’s here. Jen has landed in Omaha. 💗
+          </div>
+          <div id="finished-sub" class="finished-sub" style="display:none">
+            No more counting down — just holding, breathing, and finally being in the same place.
+          </div>
+
+          <div class="tiny">
+            Target time is calculated in <span>America/Chicago (UTC-06:00)</span> for
+            <span>Nov&nbsp;19,&nbsp;2025&nbsp;at&nbsp;05:12</span>.
+          </div>
         </div>
       </div>
     </div>
