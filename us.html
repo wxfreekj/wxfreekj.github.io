@@ -3,271 +3,94 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Countdown to Jen Landing in Omaha — 11/19/2025 5:12 CT</title>
+  <title>Countdown to Jen Landing in Omaha — 11/19/2025 5:12 PM CT</title>
   <style>
     :root {
       --bg-top: #050817;
       --bg-bottom: #1e293b;
       --card: rgba(15,23,42,0.96);
-      --accent: #fb7185;     /* soft romantic pink */
-      --accent-soft: #f97316; /* warm glow accent */
+      --accent: #fb7185;
+      --accent-soft: #f97316;
       --muted: #cbd5f5;
       --ink-soft: #e5e7f5;
       --w: 760px;
     }
 
-    html, body {
-      height: 100%;
-      margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+    html,body{
+      height:100%;
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
       background:
-        radial-gradient(circle at top left, rgba(251,113,133,0.35), transparent 60%),
-        radial-gradient(circle at bottom right, rgba(56,189,248,0.25), transparent 60%),
-        linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
-      color: var(--ink-soft);
+        radial-gradient(circle at top left,rgba(251,113,133,0.35),transparent 60%),
+        radial-gradient(circle at bottom right,rgba(56,189,248,0.25),transparent 60%),
+        linear-gradient(180deg,var(--bg-top) 0%,var(--bg-bottom) 100%);
+      color:var(--ink-soft);
     }
 
-    .wrap {
-      min-height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 16px;
-      box-sizing: border-box;
+    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:40px 16px;box-sizing:border-box}
+    .card-wrap{position:relative;width:100%;max-width:var(--w)}
+    .card{
+      width:100%;
+      background:linear-gradient(145deg,rgba(15,23,42,0.98),rgba(15,23,42,0.94));
+      border-radius:18px;
+      padding:28px 24px 24px;
+      box-shadow:0 18px 60px rgba(15,23,42,0.9),0 0 0 1px rgba(248,250,252,0.03);
+      position:relative;
+      overflow:hidden;
+      z-index:1
     }
-
-    /* New wrapper around card + image so we can position the image relative to the card */
-    .card-wrap {
-      position: relative;
-      width: 100%;
-      max-width: var(--w);
-      display: block;
-      /* keep same centering as .card had implicitly */
-    }
-
-    /* the card itself (kept mostly unchanged) */
-    .card {
-      width: 100%;
-      background: linear-gradient(145deg, rgba(15,23,42,0.98), rgba(15,23,42,0.94));
-      border-radius: 18px;
-      padding: 28px 24px 24px;
-      box-shadow:
-        0 18px 60px rgba(15,23,42,0.9),
-        0 0 0 1px rgba(248,250,252,0.03);
-      position: relative;
-      overflow: hidden;
-      z-index: 1; /* make sure the card sits beneath the image if image overlaps */
-    }
-
-    .card::before {
-      content: "";
-      position: absolute;
-      inset: -120px;
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-120px;
       background:
-        radial-gradient(circle at top center, rgba(251,113,133,0.15), transparent 55%),
-        radial-gradient(circle at bottom center, rgba(56,189,248,0.12), transparent 55%);
-      opacity: 0.9;
-      pointer-events: none;
+        radial-gradient(circle at top center,rgba(251,113,133,0.15),transparent 55%),
+        radial-gradient(circle at bottom center,rgba(56,189,248,0.12),transparent 55%);
+      opacity:.9;
+      pointer-events:none
     }
-
-    /* the image that sits above the card, bottom edge aligned to top of the card */
-    .us-pic {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 100%; /* bottom of image aligns with top of .card */
-      z-index: 2;
-      pointer-events: none; /* don't block clicks */
-      max-width: 420px;     /* tweak this to taste */
-      width: min(48%, 360px); /* responsive */
-      margin-bottom: 0;     /* exact flush; set negative if you want overlap */
-      filter: drop-shadow(0 10px 30px rgba(0,0,0,0.45));
+    .us-pic{
+      position:absolute;left:50%;transform:translateX(-50%);bottom:100%;
+      z-index:2;pointer-events:none;
+      max-width:420px;width:min(48%,360px);
+      filter:drop-shadow(0 10px 30px rgba(0,0,0,.45))
     }
-
-    .card-inner {
-      position: relative;
-      z-index: 1;
+    h1{margin:0;font-size:22px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    h1 span.highlight{color:var(--accent)}
+    .heart{width:22px;height:22px;position:relative;transform:rotate(-45deg);animation:heartbeat 1.5s ease-in-out infinite}
+    .heart::before,.heart::after{content:"";position:absolute;width:22px;height:22px;background:var(--accent);border-radius:50%}
+    .heart::before{top:-11px;left:0}
+    .heart::after{left:11px;top:0}
+    @keyframes heartbeat{
+      0%,20%,40%,60%,80%,100%{transform:rotate(-45deg) scale(1)}
+      30%,70%{transform:rotate(-45deg) scale(1.15)}
+      50%{transform:rotate(-45deg) scale(1.2)}
     }
-
-    .header-row {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-    }
-
-    .title-block {
-      flex: 1 1 auto;
-      min-width: 0;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 22px;
-      letter-spacing: 0.3px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    h1 span.highlight {
-      color: var(--accent);
-    }
-
-    .heart {
-      width: 22px;
-      height: 22px;
-      position: relative;
-      transform: rotate(-45deg);
-      animation: heartbeat 1.5s ease-in-out infinite;
-    }
-
-    .heart::before,
-    .heart::after {
-      content: "";
-      position: absolute;
-      width: 22px;
-      height: 22px;
-      background: var(--accent);
-      border-radius: 50%;
-    }
-
-    .heart::before {
-      top: -11px;
-      left: 0;
-    }
-
-    .heart::after {
-      left: 11px;
-      top: 0;
-    }
-
-    @keyframes heartbeat {
-      0%, 20%, 40%, 60%, 80%, 100% {
-        transform: rotate(-45deg) scale(1);
-      }
-      30%, 70% {
-        transform: rotate(-45deg) scale(1.15);
-      }
-      50% {
-        transform: rotate(-45deg) scale(1.2);
-      }
-    }
-
-    p.lead {
-      margin: 2px 0 18px 0;
-      color: var(--muted);
-      font-size: 14px;
-      max-width: 40rem;
-    }
-
-    p.lead strong {
-      color: var(--accent-soft);
-      font-weight: 600;
-    }
-
-    .timer {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 10px;
-    }
-
-    .unit {
-      background: radial-gradient(circle at top, rgba(251,113,133,0.14), rgba(15,23,42,0.95));
-      border-radius: 12px;
-      padding: 14px 16px 12px;
-      min-width: 92px;
-      text-align: center;
-      border: 1px solid rgba(248,250,252,0.1);
-      box-shadow: 0 10px 30px rgba(15,23,42,0.8);
-    }
-
-    .value {
-      font-size: 30px;
-      font-weight: 700;
-      color: var(--accent);
-      line-height: 1;
-    }
-
-    .label {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 6px;
-      letter-spacing: 0.7px;
-      text-transform: uppercase;
-    }
-
-    .note {
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: 13px;
-      text-align: center;
-    }
-
-    .note em {
-      color: var(--accent-soft);
-      font-style: normal;
-      font-weight: 600;
-    }
-
-    .finished {
-      text-align: center;
-      padding: 18px 0 8px;
-      font-weight: 700;
-      color: #bbf7d0;
-      font-size: 16px;
-    }
-
-    .finished-sub {
-      text-align: center;
-      color: var(--muted);
-      font-size: 13px;
-      margin-top: 2px;
-    }
-
-    .tiny {
-      margin-top: 10px;
-      font-size: 11px;
-      color: #9ca3af;
-      text-align: center;
-    }
-
-    .tiny span {
-      color: rgba(248,250,252,0.8);
-    }
-
-    @media (max-width: 480px) {
-      .card {
-        padding: 20px 16px 18px;
-      }
-      h1 {
-        font-size: 18px;
-      }
-      .value {
-        font-size: 24px;
-      }
-      .unit {
-        min-width: 76px;
-        padding: 12px 10px 10px;
-      }
-      .us-pic {
-        width: min(60%, 240px);
-        max-width: 320px;
-      }
+    p.lead{margin:2px 0 18px 0;color:var(--muted);font-size:14px}
+    p.lead strong{color:var(--accent-soft)}
+    .timer{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+    .unit{background:radial-gradient(circle at top,rgba(251,113,133,0.14),rgba(15,23,42,0.95));border-radius:12px;padding:14px 16px 12px;min-width:92px;text-align:center;border:1px solid rgba(248,250,252,0.1);box-shadow:0 10px 30px rgba(15,23,42,0.8)}
+    .value{font-size:30px;font-weight:700;color:var(--accent);line-height:1}
+    .label{font-size:11px;color:var(--muted);margin-top:6px;letter-spacing:.7px;text-transform:uppercase}
+    .note{margin-top:4px;color:var(--muted);font-size:13px;text-align:center}
+    .note em{color:var(--accent-soft);font-style:normal;font-weight:600}
+    .finished{text-align:center;padding:18px 0 8px;font-weight:700;color:#bbf7d0;font-size:16px}
+    .finished-sub{text-align:center;color:var(--muted);font-size:13px;margin-top:2px}
+    .tiny{margin-top:10px;font-size:11px;color:#9ca3af;text-align:center}
+    .tiny span{color:rgba(248,250,252,0.8)}
+    @media(max-width:480px){
+      .card{padding:20px 16px 18px}
+      h1{font-size:18px}
+      .value{font-size:24px}
+      .unit{min-width:76px;padding:12px 10px 10px}
+      .us-pic{width:min(60%,240px);max-width:320px}
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <!-- New wrapper: contains image and card so image can be positioned relative to the card -->
     <div class="card-wrap">
-      <!-- Put your PNG here. Path is relative to this HTML file. -->
       <img class="us-pic" src="us.png" alt="Us together">
-
       <div class="card" role="region" aria-labelledby="countdownHeading">
         <div class="card-inner">
           <div class="header-row">
@@ -276,7 +99,7 @@
                 <span class="highlight">She's FUCKING HERE!!! Lets goooooooooo!!!</span> Countdown
               </h1>
               <p class="lead">
-                Every moment between now and <strong>11/19/2025 at 5:12&nbsp;AM (CT)</strong>
+                Every moment between now and <strong>11/19/2025 at 5:12 PM (CT)</strong>
                 is just time the universe is using to line things up so that
                 <strong>Jen</strong> steps off that plane and into my arms in Omaha.
               </p>
@@ -285,25 +108,13 @@
           </div>
 
           <div id="timer" class="timer" aria-live="polite">
-            <div class="unit" title="Days until Jen lands">
-              <div id="days" class="value">—</div>
-              <div class="label">Days</div>
-            </div>
-            <div class="unit" title="Hours until Jen lands">
-              <div id="hours" class="value">—</div>
-              <div class="label">Hours</div>
-            </div>
-            <div class="unit" title="Minutes until Jen lands">
-              <div id="minutes" class="value">—</div>
-              <div class="label">Minutes</div>
-            </div>
-            <div class="unit" title="Seconds until Jen lands">
-              <div id="seconds" class="value">—</div>
-              <div class="label">Seconds</div>
-            </div>
+            <div class="unit"><div id="days" class="value">—</div><div class="label">Days</div></div>
+            <div class="unit"><div id="hours" class="value">—</div><div class="label">Hours</div></div>
+            <div class="unit"><div id="minutes" class="value">—</div><div class="label">Minutes</div></div>
+            <div class="unit"><div id="seconds" class="value">—</div><div class="label">Seconds</div></div>
           </div>
 
-          <div id="message" class="note" aria-hidden="false"></div>
+          <div id="message" class="note"></div>
           <div id="finished" class="finished" style="display:none">
             She’s here. Jen has landed in Omaha. 💗
           </div>
@@ -313,7 +124,7 @@
 
           <div class="tiny">
             Target time is calculated in <span>America/Chicago (UTC-06:00)</span> for
-            <span>Nov&nbsp;19,&nbsp;2025&nbsp;at&nbsp;05:12</span>.
+            <span>Nov 19 2025 at 17:12 (5:12 PM)</span>.
           </div>
         </div>
       </div>
@@ -321,75 +132,63 @@
   </div>
 
   <script>
-    // Target: 2025-11-19 05:12 Central Time.
-    // On Nov 19, 2025 the US Central zone uses standard time (UTC-06:00).
-    // ISO string with explicit -06:00 offset ensures correct moment irrespective of the viewer's computer timezone.
+    // Target: 2025-11-19 17:12 Central Time (UTC-06:00)
     const target = new Date('2025-11-19T17:12:00-06:00');
 
-    const daysEl = document.getElementById('days');
-    const hoursEl = document.getElementById('hours');
-    const minsEl = document.getElementById('minutes');
-    const secsEl = document.getElementById('seconds');
-    const msgEl = document.getElementById('message');
-    const finishedEl = document.getElementById('finished');
-    const finishedSubEl = document.getElementById('finished-sub');
+    const daysEl=document.getElementById('days'),
+          hoursEl=document.getElementById('hours'),
+          minsEl=document.getElementById('minutes'),
+          secsEl=document.getElementById('seconds'),
+          msgEl=document.getElementById('message'),
+          finishedEl=document.getElementById('finished'),
+          finishedSubEl=document.getElementById('finished-sub');
 
-    function pad(n) { return String(n).padStart(2, '0'); }
+    function pad(n){return String(n).padStart(2,'0');}
 
-    function update() {
-      const now = new Date();
-      const diff = target - now;
+    function update(){
+      const now=new Date();
+      const diff=target-now;
 
-      if (isNaN(target.getTime())) {
-        msgEl.textContent = 'Something went wrong with the date — but not with how much you love her.';
+      if(isNaN(target.getTime())){
+        msgEl.textContent='Something went wrong with the date — but not with how much you love her.';
         return;
       }
 
-      if (diff <= 0) {
-        // countdown finished
-        daysEl.textContent = '00';
-        hoursEl.textContent = '00';
-        minsEl.textContent = '00';
-        secsEl.textContent = '00';
-        finishedEl.style.display = 'block';
-        finishedSubEl.style.display = 'block';
-        msgEl.textContent = '';
+      if(diff<=0){
+        daysEl.textContent='00';
+        hoursEl.textContent='00';
+        minsEl.textContent='00';
+        secsEl.textContent='00';
+        finishedEl.style.display='block';
+        finishedSubEl.style.display='block';
+        msgEl.textContent='';
         clearInterval(timerInterval);
         return;
       }
 
-      const totalSeconds = Math.floor(diff / 1000);
-      const days = Math.floor(totalSeconds / (3600 * 24));
-      const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
+      const totalSeconds=Math.floor(diff/1000);
+      const days=Math.floor(totalSeconds/(3600*24));
+      const hours=Math.floor((totalSeconds%(3600*24))/3600);
+      const minutes=Math.floor((totalSeconds%3600)/60);
+      const seconds=totalSeconds%60;
 
-      daysEl.textContent = days;
-      hoursEl.textContent = pad(hours);
-      minsEl.textContent = pad(minutes);
-      secsEl.textContent = pad(seconds);
+      daysEl.textContent=days;
+      hoursEl.textContent=pad(hours);
+      minsEl.textContent=pad(minutes);
+      secsEl.textContent=pad(seconds);
 
-      // human-friendly note centered on Jen & Omaha
-      const chicagoString = target.toLocaleString('en-US', {
-        timeZone: 'America/Chicago',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit'
-      });
-
-      if (days === 0 && hours === 0 && minutes < 60) {
-        msgEl.innerHTML = `Less than an hour until Jen lands in Omaha. <em>Your heart is basically at the gate already.</em>`;
-      } else if (days === 0 && hours < 6) {
-        msgEl.innerHTML = `Just a few more hours until Jen is breathing the same Omaha air as you. <em>Almost there.</em>`;
-      } else {
-        msgEl.innerHTML = `Counting down to <em>${chicagoString}</em> in Omaha — the moment she lands and all this waiting turns into holding her.`;
+      const chicagoString=target.toLocaleString('en-US',{timeZone:'America/Chicago',year:'numeric',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'});
+      if(days===0&&hours===0&&minutes<60){
+        msgEl.innerHTML=`Less than an hour until Jen lands in Omaha. <em>Your heart is basically at the gate already.</em>`;
+      }else if(days===0&&hours<6){
+        msgEl.innerHTML=`Just a few more hours until Jen is breathing the same Omaha air as you. <em>Almost there.</em>`;
+      }else{
+        msgEl.innerHTML=`Counting down to <em>${chicagoString}</em> in Omaha — the moment she lands and all this waiting turns into holding her.`;
       }
     }
 
     update();
-    const timerInterval = setInterval(update, 1000);
+    const timerInterval=setInterval(update,1000);
   </script>
 </body>
 </html>
