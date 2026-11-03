@@ -1,0 +1,34 @@
+/* Guidance remains readable on touch devices; existing learning layouts are retained. */
+:focus-visible{outline:3px solid #8ee7d6;outline-offset:4px}
+h1:focus{outline:none}
+.skip-link{position:fixed;top:-100px;left:16px;z-index:10;background:#6ee0c5;color:#092c31;padding:12px;border-radius:8px}
+.skip-link:focus{top:12px}
+.course-menu{position:sticky;top:85px;align-self:start;max-height:calc(100dvh - 105px);padding:4px}
+#nav{position:static;gap:12px;max-height:calc(100dvh - 220px);overflow-y:auto;padding:4px}
+.nav-group{display:grid;gap:2px}
+.nav-group h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#83e6d1;margin:10px 8px 4px}
+#nav button{width:100%;padding:9px 10px;min-height:40px;font-size:14px}
+.nav-description{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.nav-help{border-top:1px solid #36556b;padding:12px 8px;margin:0;min-height:95px;color:#c4d3e2}
+.menu-toggle{display:none}
+.journey-grid{padding:0;list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.journey-grid h3{margin:8px 0}
+.journey-grid strong{font-size:14px;color:#8ee7d6}
+.journey-grid .btn{width:100%}
+.domain-journey{border-top:1px solid #36556b;padding-top:18px}
+.domain-journey h2{font-size:19px}
+.guide-faq summary{cursor:pointer;font-weight:650;line-height:1.5;padding:4px}
+#app{overflow-wrap:anywhere}
+@media(max-width:800px){
+ .course-menu{position:static;max-height:none;overflow:visible;margin-bottom:20px;padding:0}
+ .menu-toggle{display:block;width:100%;text-align:left;min-height:48px}
+ #currentPage{font-weight:400;color:#c4d3e2}
+ #nav{display:none;max-height:none;overflow:visible;margin:10px 0 0;padding:12px;background:#101d30;border:1px solid #36556b;border-radius:12px}
+ .menu-open #nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+ #nav button{white-space:normal;min-height:48px;padding:12px 10px}
+ .nav-description{position:static;width:auto;height:auto;clip-path:none;display:block;font-size:12px;line-height:1.5;color:#b6c5d7;margin-top:4px}
+ .nav-help{display:none}
+ .journey-grid{grid-template-columns:1fr}
+ .review,.domain{flex-wrap:wrap}
+}
+@media(max-width:480px){.menu-open #nav{grid-template-columns:1fr}.actions>.btn{width:100%}.brand{font-size:14px}}
