@@ -46,7 +46,7 @@
       <aside class="side-panel">
         <div class="side-head"><h3>Scenario summary</h3><p>Calculated from forecast wind fields and selected steering rules.</p></div>
         <div class="stat-block"><div class="stat-title">Destination</div><div class="target-card"><div class="target-pin"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-7.2 7-12.1a7 7 0 1 0-14 0C5 13.8 12 21 12 21Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="8.8" r="2.3" stroke="currentColor" stroke-width="1.7"/></svg></div><div><strong id="targetName">Busch Stadium</strong><span id="targetCoords">38.6226° N, 90.1928° W</span></div></div></div>
-        <div class="stat-block"><div class="stat-title">Forecast setup</div><div class="kv"><span>Lead time</span><b id="summaryLead">36 hours</b></div><div class="kv"><span>Wind layers</span><b>1000–300 hPa</b></div><div class="kv"><span>Vertical rates</span><b id="rateSummary">2.0 up / 2.0 down m/s</b></div><div class="kv"><span>Ensemble</span><b id="memberCount">31 GEFS members</b></div><div class="kv"><span>Time steps / grid</span><b><span id="stepCount">37 hourly</span> · <span id="gridCount">169 points</span></b></div></div>
+        <div class="stat-block"><div class="stat-title">Forecast setup</div><div class="kv"><span>Lead time</span><b id="summaryLead">36 hours</b></div><div class="kv"><span>Wind layers</span><b>1000–300 hPa</b></div><div class="kv"><span>Vertical rates</span><b id="rateSummary">2.0 up / 2.0 down m/s</b></div><div class="kv"><span>Ensemble</span><b id="memberCount">31 GEFS members</b></div><div class="kv"><span>Time steps / grid</span><b><span id="stepCount">37 hourly</span> · <span id="gridCount">121 points</span></b></div></div>
         <div class="stat-block"><div class="stat-title">Best launch windows</div><div id="topLaunches" class="score-list"><div class="status">Forecast not run yet.</div></div></div>
         <div class="stat-block"><div class="stat-title">Selected launch point</div><div id="selectedLaunch" class="status">Click a forecast grid cell to see its modeled trajectory and arrival distance.</div></div>
       </aside>
@@ -57,10 +57,10 @@
   <script>
     'use strict';
     const TARGET_DEFAULT={name:'Busch Stadium',lat:38.6226,lon:-90.1928};
-    const LEVELS=[1000,925,850,700,500,300];
-    const HEIGHTS=[110,800,1500,3000,5600,9200];
-    const HALF_SPAN=15, GRID_SIZE=13, STEP=HALF_SPAN*2/(GRID_SIZE-1), BEAM=10;
-    const BATCH_SIZE=24, PARALLEL_BATCHES=1, ARRIVAL_KM=100;
+    const LEVELS=[1000,850,700,500,300];
+    const HEIGHTS=[110,1500,3000,5600,9200];
+    const HALF_SPAN=15, GRID_SIZE=11, STEP=HALF_SPAN*2/(GRID_SIZE-1), BEAM=10;
+    const BATCH_SIZE=100, PARALLEL_BATCHES=1, ARRIVAL_KM=100;
     const app={target:{...TARGET_DEFAULT},lead:36,climbRate:2,descentRate:2,profile:'windborne',map:null,heat:[],paths:[],markers:[],targetMarker:null,weather:null,weatherKey:null,points:[],best:[],selected:null,forecastStart:null};
     const $=id=>document.getElementById(id);
     const map=L.map('map',{zoomControl:false,preferCanvas:true}).setView([app.target.lat,app.target.lon],4);
@@ -199,7 +199,7 @@
       for(let member=0;member<count;member++){
         for(let i=0;i<points.length;i++)all[i].push(simulate(points[i],points,weather,member));
         $('dataStatus').textContent=`Routing GEFS member ${member+1} / ${count}`;
-        $('selectedLaunch').textContent=`Simulating rate-limited altitude changes across 169 launch points · GEFS member ${member+1} of ${count}…`;
+        $('selectedLaunch').textContent=`Simulating rate-limited altitude changes across ${points.length} launch points · GEFS member ${member+1} of ${count}…`;
         await nextPaint();
       }
       return points.map((point,i)=>{
