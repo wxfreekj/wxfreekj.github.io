@@ -105,9 +105,9 @@
         const group=batches.slice(i,i+PARALLEL_BATCHES);
         const groupRows=await Promise.all(group.map(async batch=>{
           let response;
-          for(let attempt=0;attempt<4;attempt++){
+          for(let attempt=0;attempt<2;attempt++){
             response=await fetch(ensembleApiUrl(batch));
-            if(response.status!==429||attempt===3)break;
+            if(response.status!==429||attempt===1)break;
             const retryAfter=Number(response.headers.get('retry-after')),waitMs=Number.isFinite(retryAfter)&&retryAfter>0?Math.min(65000,retryAfter*1000):1200*(attempt+1);
             $('dataStatus').textContent=`GEFS rate limit · retrying in ${Math.ceil(waitMs/1000)} s`;
             await new Promise(resolve=>setTimeout(resolve,waitMs));
