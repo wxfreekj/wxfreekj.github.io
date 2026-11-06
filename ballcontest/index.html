@@ -61,7 +61,7 @@
     const HEIGHTS=[110,800,1500,3000,5600,9200];
     const HALF_SPAN=15, GRID_SIZE=13, STEP=HALF_SPAN*2/(GRID_SIZE-1), BEAM=10;
     const BATCH_SIZE=24, PARALLEL_BATCHES=1, ARRIVAL_KM=100;
-    const app={target:{...TARGET_DEFAULT},lead:36,climbRate:2,descentRate:2,profile:'windborne',map:null,heat:[],paths:[],markers:[],targetMarker:null,weather:null,points:[],best:[],selected:null,forecastStart:null};
+    const app={target:{...TARGET_DEFAULT},lead:36,climbRate:2,descentRate:2,profile:'windborne',map:null,heat:[],paths:[],markers:[],targetMarker:null,weather:null,weatherKey:null,points:[],best:[],selected:null,forecastStart:null};
     const $=id=>document.getElementById(id);
     const map=L.map('map',{zoomControl:false,preferCanvas:true}).setView([app.target.lat,app.target.lon],4);
     L.control.zoom({position:'topright'}).addTo(map);
@@ -108,7 +108,7 @@
           for(let attempt=0;attempt<4;attempt++){
             response=await fetch(ensembleApiUrl(batch));
             if(response.status!==429||attempt===3)break;
-            const retryAfter=Number(response.headers.get('retry-after')),waitMs=Number.isFinite(retryAfter)&&retryAfter>0?Math.min(15000,retryAfter*1000):1200*(attempt+1);
+            const retryAfter=Number(response.headers.get('retry-after')),waitMs=Number.isFinite(retryAfter)&&retryAfter>0?Math.min(65000,retryAfter*1000):1200*(attempt+1);
             $('dataStatus').textContent=`GEFS rate limit · retrying in ${Math.ceil(waitMs/1000)} s`;
             await new Promise(resolve=>setTimeout(resolve,waitMs));
           }
@@ -242,7 +242,10 @@
       const button=$('runForecast');button.disabled=true;button.style.opacity='.7';clearForecastLayers();app.selected=null;app.best=[];
       $('dataStatus').innerHTML='<span class="spinner"></span>Loading GEFS ensemble';$('selectedLaunch').textContent='Downloading 31-member pressure-level winds…';
       try{
-        const points=buildGrid();app.points=points;const rows=await fetchEnsembleRows(points),weather=decodeEnsemble(rows,points);app.weather=weather;app.forecastStart=weather.runTime;
+        const points=buildGrid(),weatherKey=`${app.target.lat.toFixed(3)},${app.target.lon.toFixed(3)}`,canReuse=app.weather&&app.weatherKey===weatherKey&&app.weather.times.length>app.lead;app.points=points;
+        if(canReuse){$('dataStatus').textContent='Using cached GEFS winds';}
+        else{const rows=await fetchEnsembleRows(points);app.weather=decodeEnsemble(rows,points);app.weatherKey=weatherKey;}
+        const weather=app.weather;app.forecastStart=weather.runTime;
         $('memberCount').textContent=`${weather.memberCount} GEFS members`;
         const results=await solveEnsemble(points,weather);app.best=[];drawForecast(results,points);
         $('validTime').textContent=nearestForecastHour(weather.times[Math.min(app.lead,weather.times.length-1)]);
