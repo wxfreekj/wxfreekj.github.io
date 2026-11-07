@@ -24,7 +24,7 @@
   <main class="shell">
     <header class="topbar">
       <div class="brand"><div class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2.8c-3.3 0-5.5 2.6-5.5 5.7 0 3.7 5.5 10.7 5.5 10.7s5.5-7 5.5-10.7c0-3.1-2.2-5.7-5.5-5.7Z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="8.5" r="2.3" stroke="currentColor" stroke-width="1.5"/><path d="M12 19.2v2M9.5 21.2h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><div><div class="eyebrow">Trajectory competition toolkit</div><h1>Balloon Trajectory Lab</h1></div></div>
-      <div class="top-meta"><div class="source-pill"><span class="dot"></span> NOAA GEFS · 31 members</div><div class="live-pill"><span class="dot"></span><span id="dataStatus">Ready to calculate</span></div></div>
+      <div class="top-meta"><div class="source-pill" id="sourcePill"><span class="dot"></span> NOAA GEFS · 31 members</div><div class="live-pill"><span class="dot"></span><span id="dataStatus">Ready to calculate</span></div></div>
     </header>
     <section class="intro">
       <div><h2>Find the wind window.</h2><p>Explore which launch areas have winds that can carry an altitude-steering balloon toward your target at the selected lead time.</p></div>
@@ -89,7 +89,7 @@
       $('rateSummary').textContent=`${app.climbRate.toFixed(1)} up / ${app.descentRate.toFixed(1)} down m/s`;$('climbRead').textContent=app.climbRate.toFixed(1);$('descentRead').textContent=app.descentRate.toFixed(1);
     }
     function updateDataModeUi(){
-      const ensemble=app.dataMode==='ensemble';$('dataMode').value=app.dataMode;
+      const ensemble=app.dataMode==='ensemble';$('dataMode').value=app.dataMode;$('sourcePill').textContent=ensemble?'NOAA GEFS · 31 members':'NOAA GFS · deterministic';
       $('legendTitle').textContent=ensemble?'GEFS members within 100 km at lead time':'GFS deterministic reachability at lead time';
       $('legendScale').innerHTML=ensemble?'<span class="leg"><i class="swatch" style="background:#40bd8c"></i>Favorable ≥70%</span><span class="leg"><i class="swatch" style="background:#e5b64f"></i>Mixed 30–69%</span><span class="leg"><i class="swatch" style="background:#d46c66"></i>Unfavorable &lt;30%</span>':'<span class="leg"><i class="swatch" style="background:#40bd8c"></i>Within 100 km</span><span class="leg"><i class="swatch" style="background:#d46c66"></i>Beyond 100 km</span>';
       $('memberCount').textContent=ensemble?'31 GEFS members':'1 GFS deterministic run';
@@ -216,8 +216,8 @@
     function selectLaunch(r){
       app.selected=r;app.markers.forEach(layer=>map.removeLayer(layer));app.markers=[];
       const marker=L.marker([r.start.lat,r.start.lon],{icon:balloonIcon,zIndexOffset:500}).addTo(map);app.markers.push(marker);
-      marker.bindPopup(`<b>Launch point</b><p>${fmtCoord(r.start.lat,r.start.lon)}</p><p>${shareLabel(r)} within 100 km</p><p>${r.within300}/${r.count} scenarios within 300 km; median miss ${Math.round(r.medianDistance)} km</p><p>Selected climb/descent: ${app.climbRate.toFixed(1)} / ${app.descentRate.toFixed(1)} m/s</p>`).openPopup();
-      $('selectedLaunch').innerHTML=`<div class="route-card"><strong>${category(r)} · ${shareLabel(r)} within 100 km</strong><p>${app.dataMode==='ensemble'?`${r.within100} of ${r.count} GEFS member routes reach the arrival tolerance.`:'The single GFS route '+(r.within100?'reaches':'does not reach')+' the arrival tolerance.'} ${r.within300} scenarios are within 300 km.</p><p>Median terminal miss: ${Math.round(r.medianDistance)} km · Best route: ${Math.round(r.bestDistance)} km.</p><p>Launch ${fmtCoord(r.start.lat,r.start.lon)} · climb ${app.climbRate.toFixed(1)} / descent ${app.descentRate.toFixed(1)} m/s.</p></div>`;
+      marker.bindPopup(`<b>Launch point</b><p>${fmtCoord(r.start.lat,r.start.lon)}</p><p>${shareLabel(r)}</p><p>${r.within300}/${r.count} scenarios within 300 km; median miss ${Math.round(r.medianDistance)} km</p><p>Selected climb/descent: ${app.climbRate.toFixed(1)} / ${app.descentRate.toFixed(1)} m/s</p>`).openPopup();
+      $('selectedLaunch').innerHTML=`<div class="route-card"><strong>${category(r)} · ${shareLabel(r)}</strong><p>${app.dataMode==='ensemble'?`${r.within100} of ${r.count} GEFS member routes reach the arrival tolerance.`:'The single GFS route '+(r.within100?'reaches':'does not reach')+' the arrival tolerance.'} ${r.within300} scenarios are within 300 km.</p><p>Median terminal miss: ${Math.round(r.medianDistance)} km · Best route: ${Math.round(r.bestDistance)} km.</p><p>Launch ${fmtCoord(r.start.lat,r.start.lon)} · climb ${app.climbRate.toFixed(1)} / descent ${app.descentRate.toFixed(1)} m/s.</p></div>`;
     }
     function renderSummary(){
       const best=app.best,r=best[0];if(!r)return;
