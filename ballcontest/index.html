@@ -112,7 +112,7 @@
           await new Promise(resolve=>setTimeout(resolve,waitMs));continue;
         }
         if(!response.ok){const detail=(await response.text()).slice(0,180);throw new Error(`${modeLabel()} service returned HTTP ${response.status}${detail?`: ${detail}`:''}.`);}
-        const data=await response.json(),rows=Array.isArray(data)?data:[data];
+        const raw=await response.text();let data;try{data=JSON.parse(raw);}catch(parseError){const sanitized=raw.replace(/(^|[:,\\[]\\s*)-?(?:nan|inf(?:inity)?)(?=\\s*[,}\\]])/gim,'$1null');if(sanitized===raw)throw new Error(`${modeLabel()} returned malformed JSON; retry later or switch data modes.`);try{data=JSON.parse(sanitized);}catch{throw new Error(`${modeLabel()} returned malformed JSON; retry later or switch data modes.`);}}const rows=Array.isArray(data)?data:[data];
         if(rows.length!==points.length)throw new Error(`Weather service returned ${rows.length} locations; expected ${points.length}.`);
         return rows;
       }
