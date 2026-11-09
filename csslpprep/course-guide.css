@@ -18,6 +18,9 @@ h1:focus{outline:none}
 .domain-journey{border-top:1px solid #36556b;padding-top:18px}
 .domain-journey h2{font-size:19px}
 .guide-faq summary{cursor:pointer;font-weight:650;line-height:1.5;padding:4px}
+.progress-notice{position:fixed;z-index:4;bottom:12px;left:12px;right:12px;max-width:680px;margin:0 auto}
+.flashcard{width:100%;color:inherit}
+.flashcard-text{display:block;font-size:1.35rem;margin:12px 0}
 #app{overflow-wrap:anywhere}
 @media(max-width:800px){
  .course-menu{position:static;max-height:none;overflow:visible;margin-bottom:20px;padding:0}
