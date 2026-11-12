@@ -1,0 +1,214 @@
+/*
+  CSSLP Prep visual system
+  Palette: charcoal black #21232E, royal blue #105BFF, tangerine #FEB500.
+  The three brand colors carry all meaningful accents; white/grey are
+  neutral text and accessible state colors.
+  Loaded last, after the legacy layout and accessibility styles.
+*/
+:root {
+  --charcoal: #21232E;
+  --royal-blue: #105BFF;
+  --tangerine: #FEB500;
+  --surface: #292C3A;
+  --surface-raised: #303444;
+  --surface-deep: #191B25;
+  --surface-hover: #34394B;
+  --line: #43485B;
+  --text-main: #F7F8FC;
+  --text-muted: #C3C9D9;
+  --text-soft: #9FAAC2;
+  --blue-soft: rgba(16,91,255,.15);
+  --orange-soft: rgba(254,181,0,.12);
+  color-scheme: dark;
+  color: var(--text-main);
+  background: var(--charcoal);
+}
+html { background: var(--charcoal); }
+body {
+  color: var(--text-main);
+  background:
+    radial-gradient(ellipse at 78% -12%, rgba(16,91,255,.18) 0, transparent 45%),
+    var(--charcoal);
+}
+::selection { background: var(--royal-blue); color: #fff; }
+header {
+  background: rgba(25,27,37,.96);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 3px 20px rgba(0,0,0,.18);
+}
+.brand { color: var(--text-main); }
+.brand span { color: var(--tangerine); }
+.brand span[style] { color: var(--text-muted) !important; }
+.pill {
+  color: var(--tangerine);
+  border-color: rgba(254,181,0,.44);
+  background: rgba(254,181,0,.07);
+}
+h1,h2,h3,h4,h5,h6 { color: var(--text-main); }
+p { color: var(--text-muted); }
+a { color: #7DA5FF; text-underline-offset: 3px; }
+a:hover { color: var(--tangerine); }
+.muted,.small,.source { color: var(--text-muted); }
+.eyebrow { color: var(--tangerine); }
+nav button,#nav button {
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  background: transparent;
+  transition: background .14s ease, border-color .14s ease, color .14s ease;
+}
+nav button:hover,#nav button:hover {
+  background: var(--blue-soft);
+  color: var(--text-main);
+  border-color: rgba(16,91,255,.45);
+}
+nav button.active,#nav button.active,
+nav button.active:hover,#nav button.active:hover {
+  background: var(--royal-blue);
+  color: #fff;
+  border-color: var(--royal-blue);
+  box-shadow: 0 3px 12px rgba(16,91,255,.22);
+}
+#nav .nav-group h2 { color: var(--tangerine); }
+.nav-help {
+  color: var(--text-muted);
+  border-top: 1px solid var(--line);
+}
+.nav-description { color: var(--text-muted); }
+:focus-visible,button:focus-visible,
+input:focus-visible,textarea:focus-visible,select:focus-visible,
+a:focus-visible,summary:focus-visible {
+  outline: 3px solid var(--tangerine);
+  outline-offset: 3px;
+}
+.skip-link { background: var(--tangerine); color: var(--charcoal); }
+.hero {
+  border: 1px solid rgba(16,91,255,.65);
+  background:
+    radial-gradient(ellipse at 92% 10%, rgba(16,91,255,.47), transparent 45%),
+    linear-gradient(115deg,#172A60 0%, #20335C 55%, #252837 100%);
+  box-shadow: 0 14px 35px rgba(0,0,0,.17);
+}
+.hero p { color: #E0E8FB; }
+.hero h1 { color: #FFF; }
+.btn,.menu-toggle {
+  color: var(--text-main);
+  background: var(--surface-raised);
+  border: 1px solid #6372A0;
+  transition: background .14s ease, border-color .14s ease, transform .14s ease;
+}
+.btn.primary {
+  color: #fff;
+  background: var(--royal-blue);
+  border-color: var(--royal-blue);
+  box-shadow: 0 3px 12px rgba(16,91,255,.19);
+}
+.btn:hover { filter: none; background: #3B4663; border-color: #8CA6FF; }
+.btn.primary:hover { background: #286CFF; border-color: #286CFF; }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .48; }
+.card {
+  color: var(--text-main);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 5px 16px rgba(0,0,0,.09);
+}
+.card:hover { border-color: #5C6EAD; }
+.stat { color: var(--tangerine); }
+.meter { background: #45495C; }
+.meter>div {
+  background: var(--tangerine);
+  box-shadow: 0 0 9px rgba(254,181,0,.20);
+}
+.tag {
+  color: #DDE7FF;
+  background: var(--blue-soft);
+  border: 1px solid rgba(16,91,255,.32);
+}
+.detail {
+  color: var(--text-main);
+  background: var(--surface-deep);
+  border: 1px solid var(--line);
+}
+.detail summary { color: var(--text-main); }
+.option {
+  background: var(--surface-raised);
+  border-color: #545B72;
+  color: var(--text-main);
+}
+.option:hover { border-color: #7FA5FF; background: #354260; }
+.option.selected {
+  background: var(--blue-soft);
+  border-color: var(--royal-blue);
+  box-shadow: inset 3px 0 0 var(--royal-blue);
+}
+.option.correct {
+  background: rgba(16,91,255,.19);
+  border-color: var(--royal-blue);
+  box-shadow: inset 3px 0 0 var(--royal-blue);
+}
+.option.wrong {
+  background: rgba(254,181,0,.13);
+  border-color: var(--tangerine);
+  box-shadow: inset 3px 0 0 var(--tangerine);
+}
+.explain {
+  background: var(--blue-soft);
+  border-left: 3px solid var(--royal-blue);
+  color: var(--text-main);
+}
+.lesson { border-left: 3px solid var(--royal-blue); }
+.lesson strong { color: var(--text-main); }
+.lesson details { border-top: 1px solid var(--line); }
+.lesson summary { color: var(--tangerine); }
+.focus {
+  background: var(--orange-soft);
+  border: 1px solid rgba(254,181,0,.48);
+  color: var(--text-main);
+}
+.focus p { color: #E4DBCB; }
+.field,textarea,input,select {
+  color: var(--text-main);
+  background: var(--surface-deep);
+  border-color: #6A7088;
+}
+.field::placeholder,textarea::placeholder,input::placeholder {
+  color: #ADB5CB;
+  opacity: 1;
+}
+.field:focus { border-color: var(--tangerine); }
+.warning {
+  color: #FFE6AA;
+  background: rgba(254,181,0,.12);
+  border: 1px solid rgba(254,181,0,.53);
+}
+.flashcard {
+  background: linear-gradient(140deg,#20386F,#292C3A 76%);
+  border: 1px solid rgba(16,91,255,.67);
+  color: var(--text-main);
+}
+.flashcard:hover { border-color: var(--tangerine); }
+.timer { color: var(--tangerine); }
+.study-block:hover,.study-block:focus-visible {
+  border-color: var(--royal-blue);
+  background: var(--blue-soft);
+  outline-color: var(--tangerine);
+}
+#currentPage { color: var(--text-muted); }
+.journey-grid strong { color: var(--tangerine); }
+.domain-journey { border-top: 1px solid var(--line); }
+.guide-faq summary { color: var(--text-main); }
+.guide-faq details[open] { border-color: rgba(254,181,0,.48); }
+.review { border-color: var(--line); }
+@media (max-width:800px) {
+  #nav {
+    background: var(--surface-deep);
+    border: 1px solid var(--line);
+  }
+  #nav .nav-description { color: #D1D6E4; }
+  .menu-toggle { background: var(--surface-raised); border-color: var(--royal-blue); }
+  .hero { background: linear-gradient(145deg,#183A92,#242B48 70%,#21232E); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .btn,nav button,#nav button { transition: none; }
+  .btn:active { transform: none; }
+}
