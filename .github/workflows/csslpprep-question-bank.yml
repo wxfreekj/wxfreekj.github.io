@@ -1,0 +1,23 @@
+name: Validate CSSLP question bank
+
+on:
+  push:
+    paths:
+      - 'csslpprep/question-bank.js'
+      - 'csslpprep/validate-question-bank.cjs'
+      - '.github/workflows/csslpprep-question-bank.yml'
+  pull_request:
+    paths:
+      - 'csslpprep/question-bank.js'
+      - 'csslpprep/validate-question-bank.cjs'
+
+permissions:
+  contents: read
+
+jobs:
+  unique-answer-choices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate all questions, choices and answer keys
+        run: node csslpprep/validate-question-bank.cjs
