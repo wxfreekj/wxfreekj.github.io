@@ -36,7 +36,11 @@ const BASE_QUESTIONS=[
 [7,'A vendor provides a library with an unclear build origin. What is the BEST next step?',['Verify provenance and evaluate supplier and artifact risk before adoption','Assume the download is trustworthy','Disable integrity checks','Copy the library into production immediately'],0,'Provenance, integrity and supplier assurance support software supply chain risk management.'],
 [7,'Which acquisition requirement BEST supports supply-chain incident response?',['Defined vulnerability disclosure and incident notification timelines','A vendor logo on the website','Unlimited shared administrative access','No right to assess suppliers'],0,'Supplier notification and response obligations should be established contractually.']
 ];
-const QUESTIONS=BASE_QUESTIONS.concat(window.CSSLP_EXPANSION.questions);
+// Keep the original 88 questions indexed for previously saved practice history, but
+// use only the revised 800-question bank for every NEW practice or mock session.
+const LEGACY_QUESTIONS=BASE_QUESTIONS.concat(window.CSSLP_EXPANSION.questions);
+const QUESTIONS=LEGACY_QUESTIONS.concat(window.CSSLP_BANK.map(q=>[q.domain,q.stem,q.choices,q.answer,q.explanation]));
+const ACTIVE_QUESTION_IDS=window.CSSLP_BANK.map((_,i)=>LEGACY_QUESTIONS.length+i);
 let page='home',domain=0,quiz=[],index=0,selected=null,revealed=false,mode='practice',answerOrders=[],sessionStart=0,sessionLimit=0,sessionRecords=[];
 let flashIndex=0,flashBack=false,flashMode='due';
 function save(){saveCourseProgress(state)}
@@ -70,7 +74,7 @@ let mockAnswers = [];
 
 function startQuiz(kind, selectedDomain) {
   mode = kind;
-  const ids = QUESTIONS.map((_, id) => id);
+  const ids = ACTIVE_QUESTION_IDS.slice();
   const domainPool = d => ids.filter(id => QUESTIONS[id][0] === d);
   if (kind === 'mock' || kind === 'diagnostic') {
     const quotas = kind === 'mock' ? MOCK_COUNTS : DOMAINS.map(() => 2);
@@ -105,7 +109,7 @@ function quizHome() {
     'You can skip and revisit questions. Feedback appears after submission or when time runs out. ' +
     'This uses the same pool as practice, so some questions may be familiar.</p>' +
     button('Start timed practice', 'startQuiz', ['mock']) + '</section>' +
-    '<p class="source">Practice pool: ' + QUESTIONS.length + ' questions. Use the results to identify topics to revisit.</p>');
+    '<p class="source">Practice pool: ' + ACTIVE_QUESTION_IDS.length + ' revised questions. Earlier practice results remain available in your history.</p>');
 }
 
 function quizPage() {
