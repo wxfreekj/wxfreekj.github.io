@@ -512,7 +512,39 @@ function drawArrow(a,points=a.p,override=null){if(points.length<2)return;const s
 function trail(a,t){let p=a.p.slice(),h=p[p.length-1],v=a.v;for(let i=1;i<G.W+G.H+3;i++)p.push([h[0]+v[0]*i,h[1]+v[1]*i]);let ds=[0];for(let i=1;i<p.length;i++)ds.push(ds[i-1]+Math.hypot(p[i][0]-p[i-1][0],p[i][1]-p[i-1][1]));let length=ds[a.p.length-1];function at(x){let i=1;while(i<ds.length-1&&ds[i]<x)i++;let f=clamp((x-ds[i-1])/(ds[i]-ds[i-1]),0,1);return [p[i-1][0]+f*(p[i][0]-p[i-1][0]),p[i-1][1]+f*(p[i][1]-p[i-1][1])]};let end=t+length,out=[at(t)];for(let i=1;i<ds.length;i++)if(ds[i]>t&&ds[i]<end)out.push(p[i]);out.push(at(end));return out}
 function drawGrid(w,h){if(!gridActive)return;const seen=new Set(),span=(w+h)/scale+G.W+G.H+Math.abs(ox/scale)+Math.abs(oy/scale);ctx.save();ctx.strokeStyle=S.theme==='dark'?'rgba(125,196,242,.23)':'rgba(63,159,201,.19)';ctx.lineWidth=1/scale;ctx.beginPath();for(const a of live){const [x,y]=a.p[a.p.length-1],[dx,dy]=a.v;const key=dx===0?'v:'+x:dy===0?'h:'+y:dx===dy?'d:'+(x-y):'a:'+(x+y);if(seen.has(key))continue;seen.add(key);ctx.moveTo(x-dx*span,y-dy*span);ctx.lineTo(x+dx*span,y+dy*span)}ctx.stroke();ctx.restore()}
 function armIdle(){clearTimeout(idleTimer);const epoch=++idleEpoch;$('moveCount').textContent='';if(S.mode==='timed'||!lives||!live.length)return;idleTimer=setTimeout(()=>{if(epoch!==idleEpoch||!lives||!live.length||locked)return;const count=live.filter(a=>!G.blockers(a,live).length).length;$('moveCount').textContent=count+ (count===1?' arrow can escape':' arrows can escape')},30000)}
-function draw(now=performance.now()){if(!G)return;let r=c.getBoundingClientRect(),w=r.width,h=r.height;ctx.clearRect(0,0,w,h);let bounds=G.bounds;if(!bounds){let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;for(const a of G.arrows)for(const [x,y] of a.p){minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y)}bounds=G.bounds=Number.isFinite(minX)?{minX,minY,maxX,maxY}:{minX:0,minY:0,maxX:G.W-1,maxY:G.H-1}}let {minX,minY,maxX,maxY}=bounds;scale=Math.max(.1,Math.min((w-6)/(maxX-minX+1.1),(h-6)/(maxY-minY+1.1))*zoom);ox=w/2-(minX+maxX)*scale/2+pan[0];oy=h/2-(minY+maxY)*scale/2+pan[1];ctx.save();ctx.translate(ox,oy);ctx.scale(scale,scale);drawGrid(w,h);for(const a of live){if(animation?.a===a)continue;drawArrow(a,a.p,markedWrong.has(a.id)?'#e53946':flash?.ids.includes(a.id)?'#ef426f':hinted===a.id?'#b34cff':null)}if(keyArrow&&live.includes(keyArrow)){let p=keyArrow.p.at(-1);ctx.save();ctx.strokeStyle=S.theme==='dark'?'#ffffff':'#172342';ctx.lineWidth=Math.max(.08,2/scale);ctx.setLineDash([.13,.09]);ctx.beginPath();ctx.arc(p[0],p[1],.46,0,Math.PI*2);ctx.stroke();ctx.restore()}if(animation){let t=(now-animation.start)/animation.duration;if(t>=1){if(S.mode==='timed'&&S.timed?.deadline&&remaining()<=0){animation=null;ctx.restore();expireCompetition();return}let a=animation.a;animation=null;live=live.filter(b=>b!==a);if(keyArrow===a)keyArrow=null;locked=false;persist();armIdle();if(!live.length)finish(true)}else if(!motionQuery?.matches)drawArrow(animation.a,trail(animation.a,t*animation.distance))}ctx.restore();if(flash&&now>flash.end)flash=null;if(animation||flash){cancelAnimationFrame(frame);frame=requestAnimationFrame(draw)}}
+
+/* Web-only visual Easter egg; no changes to the puzzle generator or collision map. */
+const JAY_MOSAIC=[
+ ['10001','10001','10001','11111','10001','10001','10001'], // H
+ ['00100','00000','01100','00100','00100','00100','01110'], // i
+ ['11111','00010','00010','00010','00010','10010','01100'], // J
+ ['00000','00000','01110','10001','11111','10000','01110'], // e
+ ['00000','00000','10110','11001','10001','10001','10001']  // n
+];
+function jayMosaic(bounds,seed,mode,level){
+ if(seedWord(seed)!=='jay'||!['campaign','timed','custom'].includes(mode))return [];
+ const width=bounds.maxX-bounds.minX+1,height=bounds.maxY-bounds.minY+1;
+ // Fit one mixed-case, angular 5x7 mosaic into the interior of any board.
+ // Slightly shift the vertical placement from puzzle to puzzle; never clip.
+ const columns=31,rows=7,k=Math.min(width*.86/columns,height*.38/rows);
+ if(!(k>0))return [];
+ const x=(bounds.minX+bounds.maxX-columns*k)/2;
+ const offset=(((Number(level)||1)%5)-2)*height*.045;
+ const y=(bounds.minY+bounds.maxY-rows*k)/2+offset;
+ const starts=[0,6,14,20,26],tiles=[];
+ JAY_MOSAIC.forEach((glyph,i)=>glyph.forEach((row,j)=>{for(let q=0;q<row.length;q++)if(row[q]==='1')tiles.push([x+(starts[i]+q)*k,y+j*k,k])}));
+ return tiles;
+}
+function drawJayMosaic(bounds){
+ const tiles=jayMosaic(bounds,S.seed,S.mode,S.level);
+ if(!tiles.length)return;
+ ctx.save();
+ ctx.fillStyle=S.theme==='dark'?'rgba(177,188,255,.15)':'rgba(62,79,119,.12)';
+ for(const [x,y,k] of tiles){const gap=k*.085;ctx.fillRect(x+gap,y+gap,k-2*gap,k-2*gap)}
+ ctx.restore();
+}
+
+function draw(now=performance.now()){if(!G)return;let r=c.getBoundingClientRect(),w=r.width,h=r.height;ctx.clearRect(0,0,w,h);let bounds=G.bounds;if(!bounds){let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;for(const a of G.arrows)for(const [x,y] of a.p){minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y)}bounds=G.bounds=Number.isFinite(minX)?{minX,minY,maxX,maxY}:{minX:0,minY:0,maxX:G.W-1,maxY:G.H-1}}let {minX,minY,maxX,maxY}=bounds;scale=Math.max(.1,Math.min((w-6)/(maxX-minX+1.1),(h-6)/(maxY-minY+1.1))*zoom);ox=w/2-(minX+maxX)*scale/2+pan[0];oy=h/2-(minY+maxY)*scale/2+pan[1];ctx.save();ctx.translate(ox,oy);ctx.scale(scale,scale);drawJayMosaic(bounds);drawGrid(w,h);for(const a of live){if(animation?.a===a)continue;drawArrow(a,a.p,markedWrong.has(a.id)?'#e53946':flash?.ids.includes(a.id)?'#ef426f':hinted===a.id?'#b34cff':null)}if(keyArrow&&live.includes(keyArrow)){let p=keyArrow.p.at(-1);ctx.save();ctx.strokeStyle=S.theme==='dark'?'#ffffff':'#172342';ctx.lineWidth=Math.max(.08,2/scale);ctx.setLineDash([.13,.09]);ctx.beginPath();ctx.arc(p[0],p[1],.46,0,Math.PI*2);ctx.stroke();ctx.restore()}if(animation){let t=(now-animation.start)/animation.duration;if(t>=1){if(S.mode==='timed'&&S.timed?.deadline&&remaining()<=0){animation=null;ctx.restore();expireCompetition();return}let a=animation.a;animation=null;live=live.filter(b=>b!==a);if(keyArrow===a)keyArrow=null;locked=false;persist();armIdle();if(!live.length)finish(true)}else if(!motionQuery?.matches)drawArrow(animation.a,trail(animation.a,t*animation.distance))}ctx.restore();if(flash&&now>flash.end)flash=null;if(animation||flash){cancelAnimationFrame(frame);frame=requestAnimationFrame(draw)}}
 let audioContext=null,lastEscapeAt=0;
 function unlockAudio(){try{const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return null;if(!audioContext||audioContext.state==='closed')audioContext=new Audio();if(audioContext.state!=='running')return audioContext.resume().then(()=>audioContext).catch(()=>null);return Promise.resolve(audioContext)}catch{return null}}
 function tone(ok){if(!S.sound)return;const pending=unlockAudio();if(!pending)return;pending.then(A=>{if(!A||A.state!=='running'||!S.sound)return;try{const t=A.currentTime;const notes=ok?[{f:523.25,d:.085},{f:783.99,d:.12}]:[{f:180,d:.14},{f:115,d:.12}];let offset=0;for(const n of notes){const o=A.createOscillator(),g=A.createGain();o.type=ok?'sine':'triangle';o.frequency.value=n.f;o.connect(g);g.connect(A.destination);g.gain.setValueAtTime(.0001,t+offset);g.gain.linearRampToValueAtTime(.22,t+offset+.012);g.gain.exponentialRampToValueAtTime(.0001,t+offset+n.d);o.start(t+offset);o.stop(t+offset+n.d+.015);offset+=n.d*.72;}}catch{}})}
