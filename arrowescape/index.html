@@ -397,13 +397,13 @@ function newPuzzle(seed,d,style){const classic=style==='classic'||(style==='vari
  * Unit grid segments intersect only at shared doubled-grid vertices or midpoints.
  * Other arrows may block an exit; an arrow's OWN path must never block its exit.
  */
-function densePuzzle15(seed,d,style,level=0){
+function densePuzzle15(seed,d,style,level=0,reserved=false){
  let state=2166136261;for(const c of seed+'|v15')state=Math.imul(state^c.charCodeAt(0),16777619);
  const rand=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296};
  const shuffle=a=>{for(let i=a.length-1;i>0;i--){let j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
- const early=level>=1&&level<=10,classic=(early&&level<=4)||style==='classic'||(style==='variety'&&((state>>>0)%3!==0));
+ const early=!reserved&&level>=1&&level<=10,classic=(early&&level<=4)||style==='classic'||(style==='variety'&&((state>>>0)%3!==0));
  const D=[[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,1],[-1,-1],[1,-1]],dirs=D.slice(0,classic||d<4?4:8);
- const W=early?6+Math.floor((level-1)*.7):Math.max(12,Math.round(12+d*.36)),H=early?W+1:Math.round(W*1.25);
+ const baseW=early?6+Math.floor((level-1)*.7):Math.max(12,Math.round(12+d*.36)),baseH=early?baseW+1:Math.round(baseW*1.25),W=reserved?Math.max(28,baseW):baseW,H=reserved?Math.max(13,baseH):baseH;
  const key=(x,y)=>x+':'+y,pt=p=>key(2*p[0],2*p[1]),mid=(a,b)=>key(a[0]+b[0],a[1]+b[1]),add=(a,b)=>[a[0]+b[0],a[1]+b[1]],inside=p=>p[0]>=1&&p[1]>=1&&p[0]<W-1&&p[1]<H-1,valid=p=>p[0]>=0&&p[1]>=0&&p[0]<W&&p[1]<H;
  const cells=[];for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++)cells.push([x,y]);
  const rays=(p,v)=>{let out=[];while(true){let q=add(p,v);if(!valid(q))return out;out.push(mid(p,q),pt(q));p=q}};
@@ -415,6 +415,15 @@ function densePuzzle15(seed,d,style,level=0){
   function dependencies(keys,head,v){const out=new Set(),incoming=new Set();for(const k of ray(head,v)){let id=occ.get(k);if(id!==undefined)out.add(id)}for(const k of keys)for(const id of rayUsers.get(k)||[])incoming.add(id);return {out,incoming}}
   function acyclic(out,incoming){if(!out.size||!incoming.size)return true;let pending=[...out],seen=new Set();while(pending.length){let id=pending.pop();if(incoming.has(id))return false;if(seen.has(id))continue;seen.add(id);for(const j of graph[id])pending.push(j)}return true}
   function commit(c){let id=arrows.length;arrows.push({id,p:c.p,v:c.v});for(const k of c.keys)occ.set(k,id);graph.push(c.out);rev.push(new Set(c.incoming));if(!c.out.size)readyCount++;for(const j of c.out)rev[j].add(id);for(const j of c.incoming){if(!graph[j].size)readyCount--;graph[j].add(id)}for(const k of ray(c.p.at(-1),c.v)){let a=rayUsers.get(k);if(!a)rayUsers.set(k,a=[]);a.push(id)}filled+=c.p.length}
+  // Reserve real, ordinary arrows before filling. Every insertion still updates
+  // the same occupancy and dependency graph used by gameplay and gap filling.
+  if(reserved)for(const p of jayLetterPaths(W,H,seed)){
+   const keys=new Set([pt(p[0])]);for(let i=1;i<p.length;i++){keys.add(pt(p[i]));keys.add(mid(p[i-1],p[i]))}
+   const h=p.at(-1),q=p.at(-2),v=[h[0]-q[0],h[1]-q[1]];
+   if([...keys].some(k=>occ.has(k))||ray(h,v).some(k=>keys.has(k)))throw Error('Invalid reserved path');
+   const {out,incoming}=dependencies(keys,h,v);if(!acyclic(out,incoming))throw Error('Reserved path cycle');
+   commit({p,v,keys,out,incoming});
+  }
   function candidate(head,v,target,min,allowBlocked){let p=[head],keys=new Set([pt(head)]),exit=new Set(ray(head,v)),prev=[-v[0],-v[1]],turns=0;
    if(!allowBlocked&&[...exit].some(k=>occ.has(k)))return null;
    let bendLimit=early?(level<=3?1:2):Infinity;
@@ -455,6 +464,7 @@ function densePuzzle15(seed,d,style,level=0){
   if(early&&arrows.length>=3+Math.floor((level-1)*1.6)||!early&&coverage>=.94)return result;
  }
  if(best)return best;
+ if(reserved)throw Error('Invalid reserved puzzle');
  // Deterministic safe fallback at the intended size: disjoint short horizontal pieces.
  // Used only if all attempts fail. Arrows on each row point to the same edge.
  const arrows=[];for(let y=1;y<H-1;y++){if(early&&arrows.length>=3+Math.floor((level-1)*1.6))break;const dir=y%2?1:-1;for(let x=1;x<W-1;){let n=Math.min(W-1-x,2+Math.floor(rand()*4));if(W-1-x-n===1)n++;if(n<2)break;let p=Array.from({length:n},(_,i)=>[x+i,y]);if(dir<0)p.reverse();arrows.push({id:arrows.length,p,v:[dir,0]});x+=n;if(early&&arrows.length>=3+Math.floor((level-1)*1.6))break}}
@@ -464,6 +474,25 @@ function densePuzzle15(seed,d,style,level=0){
 
 // V16 retains V15 layouts for in-progress saves and smooths the transition after training.
 function densePuzzle16(seed,d,style,level=0){const rating=level>10&&level<21?Math.round(Math.min(d,8)+(d-Math.min(d,8))*(level-10)/11):d;return densePuzzle15(seed,rating,style,level)}
+// Web generator 17: angular letter strokes, rendered and removed like all arrows.
+// Gaps separate strokes at junctions so no arrow overlaps or blocks itself.
+function jayLetterPaths(W,H,seed){
+ const strokes=[
+  [[0,4],[0,0]],[[3,4],[3,0]],[[1,2],[2,2]], // H
+  [[5,0],[6,0]],[[5,2],[5,4]],              // i
+  [[9,0],[11,0]],[[12,0],[12,4],[9,4]],    // J
+  [[15,2],[15,1],[18,1],[18,4]],
+  [[16,3],[15,3],[15,4],[17,4],[17,3]],    // a
+  [[21,0],[21,2],[24,2],[24,4],[21,4]],
+  [[24,0],[24,1]]                         // y
+ ];
+ const x=Math.floor((W-25)/2),y=Math.max(1,Math.min(H-6,Math.floor((H-5)/2)+(Math.floor(hashUnit(seed+'|letters')*3)-1)));
+ return strokes.map(corners=>{const p=[[corners[0][0]+x,corners[0][1]+y]];for(let i=1;i<corners.length;i++){let [a,b]=corners[i-1], [c,d]=corners[i];while(a!==c||b!==d){a+=Math.sign(c-a);b+=Math.sign(d-b);p.push([a+x,b+y])}}return p});
+}
+function usesJayPaths(seed,mode){return !window.ArrowEscapeApp&&seedWord(seed)==='jay'&&['campaign','custom','timed'].includes(mode)}
+function preservePuzzleLayout(old){return !!old&&!old.won&&!!(old.removed?.length||old.markedWrong?.length||old.elapsedMs>0||Number.isFinite(old.lives)&&old.lives<3||old.gridUnlocked)}
+function densePuzzle17(seed,d,style,level=0){const rating=level>10&&level<21?Math.round(Math.min(d,8)+(d-Math.min(d,8))*(level-10)/11):d;return densePuzzle15(seed,rating,style,level,true)}
+
 function naturalPuzzle(seed,d){
  let best=null;for(let attempt=0;attempt<5;attempt++){try{let g=engine(seed+'|natural:'+attempt,d,false,false,true,true,true,true,true,false,false,false,true);if(!best||g.coverage>best.coverage)best=g;if(g.coverage>=.80)return g;}catch{}}
  if(best&&best.coverage>=.70)return best;
@@ -503,7 +532,7 @@ function resumeClock(){if(window.AE_titlePaused)return;if(S.mode==='timed'){if(!
 setInterval(()=>{competitionExpired();clockUI();if(clockStart!==null&&performance.now()-lastClockSave>=3000&&S.games[game]){S.games[game].elapsedMs=Math.floor(timeNow());lastClockSave=performance.now();save()}},250);
 document.addEventListener('visibilitychange',()=>document.hidden?pauseClock():resumeClock());window.addEventListener('pagehide',pauseClock);
 $('settings').addEventListener('close',resumeClock);
-let markedWrong=new Set();function load(reset=false){cancelBoardGesture();keyArrow=null;markedWrong=new Set();lastEscapeAt=performance.now();clockStart=null;elapsed=0;clearTimeout(idleTimer);gridActive=false;gridUnlocked=false;animation=null;flash=null;locked=false;hinted=-1;zoom=1;pan=[0,0];if(S.mode==='timed'&&!S.timed)startCompetition();if(S.mode==='campaign'&&S.format<3){const priorKey=JSON.stringify([S.mode,identity(),difficulty()]),prior=S.games[priorKey];if(reset||!prior||(!prior.won&&!prior.removed?.length)){S.format=3;save()}}let d=difficulty(),seed=identity();game=JSON.stringify([S.mode,seed,d,...(S.mode==='timed'?[S.timed.id]:[])]);let prior=S.games[game];let old=!reset&&prior;generatorVersion=old?.removed?.length&&!old.won?(old.generator||1):16;let activeStyle=old?.generator>=14&&old.style&&old.removed?.length&&!old.won?old.style:S.puzzleStyle;let introLevel=S.mode==='training'?S.level:S.mode==='campaign'&&S.format<3?S.level:0;G=generatorVersion===16?densePuzzle16(seed+'|'+d,d,activeStyle,introLevel):generatorVersion===15?densePuzzle15(seed+'|'+d,d,activeStyle,introLevel):generatorVersion===14?newPuzzle(seed+'|'+d,d,activeStyle):generatorVersion===13?shortInterlock(seed+'|'+d,d):generatorVersion===12?naturalPuzzle(seed+'|'+d,d):engine(seed+'|'+d,d,generatorVersion===1,generatorVersion===3,generatorVersion>=4,generatorVersion>=5,generatorVersion>=6,generatorVersion>=7,generatorVersion>=8,generatorVersion>=9,generatorVersion===10,generatorVersion===11);if(generatorVersion<15&&!validateCleanBoard(G,false)){generatorVersion=16;G=densePuzzle16(seed+'|'+d,d,activeStyle,introLevel);old=null;$('msg').textContent='An invalid older layout was replaced; saved campaign progress and hints are kept.';}loadedStyle=activeStyle;if(old?.won&&old.generator!==generatorVersion){old={...old,removed:G.arrows.map(a=>a.id)};}elapsed=old&&old.generator===generatorVersion?Math.max(0,Number(old.elapsedMs)||0):0;lives=old?clamp(Number(old.lives)||0,0,3):3;live=G.arrows.filter(a=>!old?.removed?.includes(a.id));if(reset){const won=!!S.games[game]?.won;S.games[game]={won};}else if(old){if(old.generator===generatorVersion)markedWrong=new Set(Array.isArray(old.markedWrong)?old.markedWrong:[]);gridUnlocked=!!old.gridUnlocked;gridActive=!!old.gridActive;}persist();draw();armIdle();if(S.mode==='timed'&&S.timed.finished){locked=true;ui();clockUI();return}if(competitionExpired())return;if(lives===0||!live.length)finish(false);else resumeClock();}
+let markedWrong=new Set();function load(reset=false){cancelBoardGesture();keyArrow=null;markedWrong=new Set();lastEscapeAt=performance.now();clockStart=null;elapsed=0;clearTimeout(idleTimer);gridActive=false;gridUnlocked=false;animation=null;flash=null;locked=false;hinted=-1;zoom=1;pan=[0,0];if(S.mode==='timed'&&!S.timed)startCompetition();if(S.mode==='campaign'&&S.format<3){const priorKey=JSON.stringify([S.mode,identity(),difficulty()]),prior=S.games[priorKey];if(reset||!prior||(!prior.won&&!prior.removed?.length)){S.format=3;save()}}let d=difficulty(),seed=identity();game=JSON.stringify([S.mode,seed,d,...(S.mode==='timed'?[S.timed.id]:[])]);let prior=S.games[game];let old=!reset&&prior;generatorVersion=preservePuzzleLayout(old)?(old.generator||1):(usesJayPaths(S.seed,S.mode)?17:16);let activeStyle=old?.generator>=14&&old.style&&preservePuzzleLayout(old)?old.style:S.puzzleStyle;let introLevel=S.mode==='training'?S.level:S.mode==='campaign'&&S.format<3?S.level:0;G=generatorVersion===17?densePuzzle17(seed+'|'+d,d,activeStyle,introLevel):generatorVersion===16?densePuzzle16(seed+'|'+d,d,activeStyle,introLevel):generatorVersion===15?densePuzzle15(seed+'|'+d,d,activeStyle,introLevel):generatorVersion===14?newPuzzle(seed+'|'+d,d,activeStyle):generatorVersion===13?shortInterlock(seed+'|'+d,d):generatorVersion===12?naturalPuzzle(seed+'|'+d,d):engine(seed+'|'+d,d,generatorVersion===1,generatorVersion===3,generatorVersion>=4,generatorVersion>=5,generatorVersion>=6,generatorVersion>=7,generatorVersion>=8,generatorVersion>=9,generatorVersion===10,generatorVersion===11);if(generatorVersion<15&&!validateCleanBoard(G,false)){generatorVersion=16;G=densePuzzle16(seed+'|'+d,d,activeStyle,introLevel);old=null;$('msg').textContent='An invalid older layout was replaced; saved campaign progress and hints are kept.';}loadedStyle=activeStyle;if(old?.won&&old.generator!==generatorVersion){old={...old,removed:G.arrows.map(a=>a.id)};}elapsed=old&&old.generator===generatorVersion?Math.max(0,Number(old.elapsedMs)||0):0;lives=old?clamp(Number(old.lives)||0,0,3):3;live=G.arrows.filter(a=>!old?.removed?.includes(a.id));if(reset){const won=!!S.games[game]?.won;S.games[game]={won};}else if(old){if(old.generator===generatorVersion)markedWrong=new Set(Array.isArray(old.markedWrong)?old.markedWrong:[]);gridUnlocked=!!old.gridUnlocked;gridActive=!!old.gridActive;}persist();draw();armIdle();if(S.mode==='timed'&&S.timed.finished){locked=true;ui();clockUI();return}if(competitionExpired())return;if(lives===0||!live.length)finish(false);else resumeClock();}
 function persist(){S.games[game]={removed:G.arrows.filter(a=>!live.includes(a)).map(a=>a.id),lives,markedWrong:[...markedWrong],elapsedMs:Math.floor(timeNow()),generator:generatorVersion,style:loadedStyle,gridUnlocked,gridActive,won:!!S.games[game]?.won};save();ui()}
 function ui(){document.body.classList.toggle('dark',S.theme==='dark');$('exitPractice').hidden=S.mode!=='training';$('exitPracticeResult').hidden=S.mode!=='training';$('menu').disabled=S.mode==='training';$('mode').textContent=S.mode==='training'?'Practice':S.mode==='timed'?'Timed competition':S.mode==='daily'?'Daily · '+dailyDay():S.mode==='custom'?'Custom seed':'Campaign';$('level').textContent=['campaign','timed','training'].includes(S.mode)?S.level:'—';$('diff').textContent=(difficulty()/100).toFixed(2);$('diff').title=(S.mode==='training'?'Practice':tierName(S.tier))+' · estimated generator difficulty (0–1)';$('hearts').textContent='♥'.repeat(lives)+'♡'.repeat(3-lives);$('hearts').setAttribute('aria-label',lives+' of 3 lives remaining');let p=Math.round(100*(1-live.length/Math.max(1,G.arrows.length)));$('pct').textContent=p+'%';$('bar').style.width=p+'%';$('hints').textContent=S.mode==='timed'?'—':S.unlimitedHints?'∞':S.hints;$('gridCredits').textContent=S.mode==='timed'?'—':S.unlimitedHints?'∞':S.gridCredits;$('gridHint').setAttribute('aria-pressed',String(gridActive));$('gridHint').disabled=S.mode==='timed'||(!S.unlimitedHints&&!gridUnlocked&&S.gridCredits<=0)||!live.length||!lives;/* Keep the hint control visually stable during an escape animation. Its click handler still rejects input while locked. */$('hint').disabled=S.mode==='timed'||(!S.unlimitedHints&&S.hints<=0)||!live.length||!lives}
 function resize(){let r=c.getBoundingClientRect(),dpr=Math.min(3,devicePixelRatio||1);c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);draw()}
@@ -513,38 +542,7 @@ function trail(a,t){let p=a.p.slice(),h=p[p.length-1],v=a.v;for(let i=1;i<G.W+G.
 function drawGrid(w,h){if(!gridActive)return;const seen=new Set(),span=(w+h)/scale+G.W+G.H+Math.abs(ox/scale)+Math.abs(oy/scale);ctx.save();ctx.strokeStyle=S.theme==='dark'?'rgba(125,196,242,.23)':'rgba(63,159,201,.19)';ctx.lineWidth=1/scale;ctx.beginPath();for(const a of live){const [x,y]=a.p[a.p.length-1],[dx,dy]=a.v;const key=dx===0?'v:'+x:dy===0?'h:'+y:dx===dy?'d:'+(x-y):'a:'+(x+y);if(seen.has(key))continue;seen.add(key);ctx.moveTo(x-dx*span,y-dy*span);ctx.lineTo(x+dx*span,y+dy*span)}ctx.stroke();ctx.restore()}
 function armIdle(){clearTimeout(idleTimer);const epoch=++idleEpoch;$('moveCount').textContent='';if(S.mode==='timed'||!lives||!live.length)return;idleTimer=setTimeout(()=>{if(epoch!==idleEpoch||!lives||!live.length||locked)return;const count=live.filter(a=>!G.blockers(a,live).length).length;$('moveCount').textContent=count+ (count===1?' arrow can escape':' arrows can escape')},30000)}
 
-/* Web-only visual Easter egg; no changes to the puzzle generator or collision map. */
-const JAY_MOSAIC=[
- ['10001','10001','10001','11111','10001','10001','10001'], // H
- ['00100','00000','01100','00100','00100','00100','01110'], // i
- ['11111','00010','00010','00010','00010','10010','01100'], // J
- ['00000','00000','01110','10001','11111','10000','01110'], // e
- ['00000','00000','10110','11001','10001','10001','10001']  // n
-];
-function jayMosaic(bounds,seed,mode,level){
- if(seedWord(seed)!=='jay'||!['campaign','timed','custom'].includes(mode))return [];
- const width=bounds.maxX-bounds.minX+1,height=bounds.maxY-bounds.minY+1;
- // Fit one mixed-case, angular 5x7 mosaic into the interior of any board.
- // Slightly shift the vertical placement from puzzle to puzzle; never clip.
- const columns=31,rows=7,k=Math.min(width*.86/columns,height*.38/rows);
- if(!(k>0))return [];
- const x=(bounds.minX+bounds.maxX-columns*k)/2;
- const offset=(((Number(level)||1)%5)-2)*height*.045;
- const y=(bounds.minY+bounds.maxY-rows*k)/2+offset;
- const starts=[0,6,14,20,26],tiles=[];
- JAY_MOSAIC.forEach((glyph,i)=>glyph.forEach((row,j)=>{for(let q=0;q<row.length;q++)if(row[q]==='1')tiles.push([x+(starts[i]+q)*k,y+j*k,k])}));
- return tiles;
-}
-function drawJayMosaic(bounds){
- const tiles=jayMosaic(bounds,S.seed,S.mode,S.level);
- if(!tiles.length)return;
- ctx.save();
- ctx.fillStyle=S.theme==='dark'?'rgba(177,188,255,.15)':'rgba(62,79,119,.12)';
- for(const [x,y,k] of tiles){const gap=k*.085;ctx.fillRect(x+gap,y+gap,k-2*gap,k-2*gap)}
- ctx.restore();
-}
-
-function draw(now=performance.now()){if(!G)return;let r=c.getBoundingClientRect(),w=r.width,h=r.height;ctx.clearRect(0,0,w,h);let bounds=G.bounds;if(!bounds){let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;for(const a of G.arrows)for(const [x,y] of a.p){minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y)}bounds=G.bounds=Number.isFinite(minX)?{minX,minY,maxX,maxY}:{minX:0,minY:0,maxX:G.W-1,maxY:G.H-1}}let {minX,minY,maxX,maxY}=bounds;scale=Math.max(.1,Math.min((w-6)/(maxX-minX+1.1),(h-6)/(maxY-minY+1.1))*zoom);ox=w/2-(minX+maxX)*scale/2+pan[0];oy=h/2-(minY+maxY)*scale/2+pan[1];ctx.save();ctx.translate(ox,oy);ctx.scale(scale,scale);drawJayMosaic(bounds);drawGrid(w,h);for(const a of live){if(animation?.a===a)continue;drawArrow(a,a.p,markedWrong.has(a.id)?'#e53946':flash?.ids.includes(a.id)?'#ef426f':hinted===a.id?'#b34cff':null)}if(keyArrow&&live.includes(keyArrow)){let p=keyArrow.p.at(-1);ctx.save();ctx.strokeStyle=S.theme==='dark'?'#ffffff':'#172342';ctx.lineWidth=Math.max(.08,2/scale);ctx.setLineDash([.13,.09]);ctx.beginPath();ctx.arc(p[0],p[1],.46,0,Math.PI*2);ctx.stroke();ctx.restore()}if(animation){let t=(now-animation.start)/animation.duration;if(t>=1){if(S.mode==='timed'&&S.timed?.deadline&&remaining()<=0){animation=null;ctx.restore();expireCompetition();return}let a=animation.a;animation=null;live=live.filter(b=>b!==a);if(keyArrow===a)keyArrow=null;locked=false;persist();armIdle();if(!live.length)finish(true)}else if(!motionQuery?.matches)drawArrow(animation.a,trail(animation.a,t*animation.distance))}ctx.restore();if(flash&&now>flash.end)flash=null;if(animation||flash){cancelAnimationFrame(frame);frame=requestAnimationFrame(draw)}}
+function draw(now=performance.now()){if(!G)return;let r=c.getBoundingClientRect(),w=r.width,h=r.height;ctx.clearRect(0,0,w,h);let bounds=G.bounds;if(!bounds){let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;for(const a of G.arrows)for(const [x,y] of a.p){minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y)}bounds=G.bounds=Number.isFinite(minX)?{minX,minY,maxX,maxY}:{minX:0,minY:0,maxX:G.W-1,maxY:G.H-1}}let {minX,minY,maxX,maxY}=bounds;scale=Math.max(.1,Math.min((w-6)/(maxX-minX+1.1),(h-6)/(maxY-minY+1.1))*zoom);ox=w/2-(minX+maxX)*scale/2+pan[0];oy=h/2-(minY+maxY)*scale/2+pan[1];ctx.save();ctx.translate(ox,oy);ctx.scale(scale,scale);drawGrid(w,h);for(const a of live){if(animation?.a===a)continue;drawArrow(a,a.p,markedWrong.has(a.id)?'#e53946':flash?.ids.includes(a.id)?'#ef426f':hinted===a.id?'#b34cff':null)}if(keyArrow&&live.includes(keyArrow)){let p=keyArrow.p.at(-1);ctx.save();ctx.strokeStyle=S.theme==='dark'?'#ffffff':'#172342';ctx.lineWidth=Math.max(.08,2/scale);ctx.setLineDash([.13,.09]);ctx.beginPath();ctx.arc(p[0],p[1],.46,0,Math.PI*2);ctx.stroke();ctx.restore()}if(animation){let t=(now-animation.start)/animation.duration;if(t>=1){if(S.mode==='timed'&&S.timed?.deadline&&remaining()<=0){animation=null;ctx.restore();expireCompetition();return}let a=animation.a;animation=null;live=live.filter(b=>b!==a);if(keyArrow===a)keyArrow=null;locked=false;persist();armIdle();if(!live.length)finish(true)}else if(!motionQuery?.matches)drawArrow(animation.a,trail(animation.a,t*animation.distance))}ctx.restore();if(flash&&now>flash.end)flash=null;if(animation||flash){cancelAnimationFrame(frame);frame=requestAnimationFrame(draw)}}
 let audioContext=null,lastEscapeAt=0;
 function unlockAudio(){try{const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return null;if(!audioContext||audioContext.state==='closed')audioContext=new Audio();if(audioContext.state!=='running')return audioContext.resume().then(()=>audioContext).catch(()=>null);return Promise.resolve(audioContext)}catch{return null}}
 function tone(ok){if(!S.sound)return;const pending=unlockAudio();if(!pending)return;pending.then(A=>{if(!A||A.state!=='running'||!S.sound)return;try{const t=A.currentTime;const notes=ok?[{f:523.25,d:.085},{f:783.99,d:.12}]:[{f:180,d:.14},{f:115,d:.12}];let offset=0;for(const n of notes){const o=A.createOscillator(),g=A.createGain();o.type=ok?'sine':'triangle';o.frequency.value=n.f;o.connect(g);g.connect(A.destination);g.gain.setValueAtTime(.0001,t+offset);g.gain.linearRampToValueAtTime(.22,t+offset+.012);g.gain.exponentialRampToValueAtTime(.0001,t+offset+n.d);o.start(t+offset);o.stop(t+offset+n.d+.015);offset+=n.d*.72;}}catch{}})}
