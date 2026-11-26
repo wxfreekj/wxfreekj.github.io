@@ -9,7 +9,7 @@ new vm.Script(script); // Syntax-check the complete game, including load/save in
 const source=script.slice(0,script.indexOf('const $=id=>'));
 function context(){const c=vm.createContext({window:{}});vm.runInContext(source+`\nconst seedWord=s=>String(s).trim().normalize('NFKC').toLowerCase();\n${script.match(/function hashUnit\(s\)\{[^\n]+/)[0]}`,c);return c}
 const c=context();
-function board(seed,d,style,level=0){return c.densePuzzle17(seed,d,style,level)}
+function board(seed,d,style,level=0){return c.densePuzzle18(seed,d,style,level)}
 function independentGraph(g){
  const pt=p=>p.map(x=>x*2).join(':'),mid=(a,b)=>[a[0]+b[0],a[1]+b[1]].join(':');
  const occ=new Map();
@@ -27,8 +27,8 @@ function verify(g,classic){
  const graph=independentGraph(g),live=new Set(g.arrows.map(a=>a.id));
  for(const a of g.arrows)assert.deepEqual([...g.blockers(a,g.arrows)].sort((a,b)=>a-b),[...graph[a.id]].sort((a,b)=>a-b));
  while(live.size){const ready=[...live].filter(i=>![...graph[i]].some(j=>live.has(j)));assert.ok(ready.length,'unsolvable dependency cycle');ready.forEach(i=>live.delete(i))}
- const paths=c.jayLetterPaths(g.W,g.H,g.testSeed);
- assert.equal(paths.length,11);
+ const paths=c.jenLetterPaths(g.W,g.H,g.testSeed);
+ assert.equal(paths.length,10);
  paths.forEach((p,i)=>assert.equal(JSON.stringify(g.arrows[i].p),JSON.stringify(p),'reserved letter lost'));
  assert.ok(g.arrows.length>paths.length,'surrounding arrows missing');
  assert.ok(g.coverage>.70,'insufficient surrounding fill');
@@ -52,7 +52,7 @@ test('deterministic generation and early-level transition',()=>{
   assert.equal(JSON.stringify(g.arrows),JSON.stringify(board(seed,50,'classic',level).arrows));
  }
 });
-test('load preserves legacy partial boards and resumes/reset v17 safely',()=>{
+test('load preserves legacy partial boards and uses Hi Jen v18 for new/reset puzzles',()=>{
  const line=script.match(/let markedWrong=new Set\(\);function load\(reset=false\)\{[^\n]+/)[0];
  const fake=vm.createContext({window:{},performance:{now:()=>0},clearTimeout(){},Set,Number,Math});
  vm.runInContext(`
@@ -63,17 +63,18 @@ test('load preserves legacy partial boards and resumes/reset v17 safely',()=>{
  ${script.match(/function preservePuzzleLayout[^\n]+/)[0]}
  const cancelBoardGesture=()=>{},difficulty=()=>24,identity=()=> 'custom-jay',persist=()=>{},draw=()=>{},armIdle=()=>{},competitionExpired=()=>false,resumeClock=()=>{},finish=()=>{},clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
  const make=(v)=>{calls.push(v);return {arrows:[{id:0},{id:1},{id:2}]}};
- const densePuzzle17=()=>make(17),densePuzzle16=()=>make(16),densePuzzle15=()=>make(15),newPuzzle=()=>make(14),shortInterlock=()=>make(13),naturalPuzzle=()=>make(12),engine=()=>make(1),validateCleanBoard=()=>true;
+ const densePuzzle18=()=>make(18),densePuzzle17=()=>make(17),densePuzzle16=()=>make(16),densePuzzle15=()=>make(15),newPuzzle=()=>make(14),shortInterlock=()=>make(13),naturalPuzzle=()=>make(12),engine=()=>make(1),validateCleanBoard=()=>true;
  const $=()=>({textContent:''});
  ${line}
  globalThis.state=()=>({generatorVersion,live,lives,elapsed,wrong:[...markedWrong],gridActive,gridUnlocked});
  globalThis.setOld=old=>{saved[JSON.stringify(['custom','custom-jay',24])]=old};
  `,fake);
- fake.load();assert.equal(fake.state().generatorVersion,17);
+ fake.load();assert.equal(fake.state().generatorVersion,18);
  fake.setOld({generator:16,removed:[0],lives:2,elapsedMs:123,markedWrong:[1],style:'classic',gridActive:true,gridUnlocked:true});
  fake.load();assert.equal(fake.state().generatorVersion,16);assert.equal(fake.state().live.length,2);assert.equal(fake.state().lives,2);assert.equal(fake.state().elapsed,123);assert.equal(fake.state().wrong[0],1);assert.equal(fake.state().gridActive,true);
- fake.load(true);assert.equal(fake.state().generatorVersion,17);assert.equal(fake.state().live.length,3);assert.equal(fake.state().lives,3);
+ fake.load(true);assert.equal(fake.state().generatorVersion,18);assert.equal(fake.state().live.length,3);assert.equal(fake.state().lives,3);
  fake.setOld({generator:16,removed:[],lives:2,markedWrong:[1],elapsedMs:123});fake.load();assert.equal(fake.state().generatorVersion,16);assert.equal(fake.state().wrong[0],1);
  fake.setOld({generator:17,removed:[1],lives:3,elapsedMs:456,style:'classic'});fake.load();assert.equal(fake.state().generatorVersion,17);assert.equal(fake.state().live.some(a=>a.id===1),false);assert.equal(fake.state().elapsed,456);
+ fake.setOld({generator:18,removed:[1],lives:3,elapsedMs:456,style:'classic'});fake.load();assert.equal(fake.state().generatorVersion,18);assert.equal(fake.state().live.some(a=>a.id===1),false);
  vm.runInContext("S.seed='jays';S.games={}",fake);fake.load();assert.equal(fake.state().generatorVersion,16);
 });
