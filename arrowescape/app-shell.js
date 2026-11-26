@@ -62,7 +62,7 @@
 #aeTutBoard{width:min(78vw,300px);height:min(78vw,300px);border-radius:18px;background:#2f3a5c;touch-action:none;
   box-shadow:0 8px 28px #0006,inset 0 0 0 1px #ffffff14}
 .ae-tut-step{font-size:12px;letter-spacing:.14em;color:${MINT};font-weight:800}
-#aeTut .ae-row{display:flex;gap:10px}
+#aeTut .ae-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center} #aeTut button{min-height:48px} #aeTut button:focus-visible,#aeTutBoard:focus-visible{outline:3px solid ${MINT};outline-offset:3px}
 #aeTut button{font:inherit;font-weight:700;border:0;border-radius:14px;padding:12px 22px;cursor:pointer;
   background:#ffffff1a;color:#f3f6ff}
 #aeTut button.ae-go{background:${MINT};color:${NAVY}}
@@ -268,8 +268,8 @@
 <button id="aeTutSkip">Skip</button>
 <div class="ae-tut-step" id="aeTutStep">HOW TO PLAY</div>
 <h2 id="aeTutHead">Tap an arrow</h2>
-<canvas id="aeTutBoard"></canvas>
-<p id="aeTutText"></p><div class="ae-hint-cards"><button type="button" class="ae-hint-card" id="aeTutArrowHint" aria-pressed="false"><b>💡 Arrow hint</b><span>Highlights an arrow that can escape now. Try it!</span></button><button type="button" class="ae-hint-card" id="aeTutGridHint" aria-pressed="false"><b># Grid hint</b><span>Shows faint lines from arrowheads so you can trace their exits.</span></button></div><div class="ae-hint-note">Tutorial hints are free. Enable unlimited hints in Settings for the real game.</div>
+<canvas id="aeTutBoard"></canvas><span id="aeTutBoardStatus" class="sr-only" role="status"></span>
+<p id="aeTutText" role="status" aria-live="polite"></p><div class="ae-hint-cards"><button type="button" class="ae-hint-card" id="aeTutArrowHint" aria-pressed="false"><b>💡 Arrow hint</b><span>Highlights an arrow that can escape now. Try it!</span></button><button type="button" class="ae-hint-card" id="aeTutGridHint" aria-pressed="false"><b># Grid hint</b><span>Shows faint lines from arrowheads so you can trace their exits.</span></button></div><div class="ae-hint-note">Tutorial hints are free. Enable unlimited hints in Settings for the real game.</div>
 <div class="ae-row"><button class="ae-go" id="aeTutGo">Play real game</button><button id="aePractice" type="button">Practice levels</button></div>`;
   document.body.appendChild(tut);
 
@@ -335,8 +335,9 @@
       const red = flash && flash.a === a && now < flash.end;
       drawArrowPx(a.p.map(toPx), red ? '#e53946' : a===suggested ? '#f7aaff' : tutColor(a, a.i), w);
     }
+    if(tutKey>=0&&live[tutKey]){const p=toPx(live[tutKey].p.at(-1));tg.save();tg.strokeStyle='#fff';tg.lineWidth=2;tg.setLineDash([3,3]);tg.beginPath();tg.arc(p[0],p[1],k*.45,0,Math.PI*2);tg.stroke();tg.restore()}
     if (anim) {
-      const prog = Math.min(1, (now - anim.start) / 420), tr = trailPx(anim.a, 0);
+      const prog = reduceMotion?1:Math.min(1, (now - anim.start) / 420), tr = trailPx(anim.a, 0);
       drawArrowPx(trailPx(anim.a, prog * tr.total).out, tutColor(anim.a, anim.a.i), w);
       if (prog >= 1) { live = live.filter((b) => b !== anim.a); anim = null; afterEscape(); }
     }
@@ -361,46 +362,33 @@
     drawTut(performance.now());
   }
 
-  function pickAt(px, py) {
-    const k = cellPx(), X = px / k - .5, Y = py / k - .5;
-    let best = null, dist = .5;
-    for (const a of live) for (let i = 1; i < a.p.length; i++) {
-      const p = a.p[i - 1], q = a.p[i], dx = q[0] - p[0], dy = q[1] - p[1];
-      const t = Math.max(0, Math.min(1, ((X - p[0]) * dx + (Y - p[1]) * dy) / (dx * dx + dy * dy)));
-      const d = Math.hypot(X - p[0] - t * dx, Y - p[1] - t * dy);
-      if (d < dist) { dist = d; best = a; }
-    }
-    return best;
-  }
-
-  tb.addEventListener('pointerdown', (e) => {
-    if (anim || !live.length) return;
-    const r = tb.getBoundingClientRect(), a = pickAt(e.clientX - r.left, e.clientY - r.top);
-    if (!a) return;
-    if (blockersOf(a)) {
-      flash = { a, end: performance.now() + 450 };
-      try { if (navigator.vibrate) navigator.vibrate(50); } catch {}
-      setText('Blocked!', 'Something is in its way. In the real game that costs a life, so check the path before you tap.');
-    } else {
-      anim = { a, start: performance.now() };
-    }
-    cancelAnimationFrame(tutRaf); tutRaf = requestAnimationFrame(drawTut);
-  });
-
+  function pickAt(px,py,type){const k=cellPx();return arrowHit(live,px/k-.5,py/k-.5,k,type).arrow}
+  const tutTap=createTapGuard();
+  function tutLocal(e){const r=tb.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]}
+  function activateTut(a){if(!a||anim||!live.length||!live.includes(a))return;if(blockersOf(a)){flash={a,end:performance.now()+(reduceMotion?1:450)};try{if(navigator.vibrate)navigator.vibrate(50)}catch{}setText('Blocked!','Something is in its way. In the real game that costs a life, so check the path before you tap.')}else anim={a,start:performance.now()};cancelAnimationFrame(tutRaf);tutRaf=requestAnimationFrame(drawTut)}
+  tb.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;const p=tutLocal(e);tutTap.down(e.pointerId,p,anim?null:pickAt(...p,e.pointerType),e.pointerType);try{tb.setPointerCapture(e.pointerId)}catch{}});
+  tb.addEventListener('pointermove',e=>tutTap.move(e.pointerId,tutLocal(e)));
+  tb.addEventListener('pointerup',e=>{const p=tutLocal(e);activateTut(tutTap.up(e.pointerId,p,pickAt(...p,e.pointerType)))});
+  tb.addEventListener('pointercancel',()=>tutTap.cancel());
+  tb.addEventListener('lostpointercapture',e=>{if(tutTap.has(e.pointerId))tutTap.cancel()});
+  let tutKey=-1;
+  tb.tabIndex=0;tb.setAttribute('aria-label','Practice arrow board. Use arrow keys to select, Enter to attempt escape.');
+  tb.addEventListener('keydown',e=>{if(anim||!live.length||!['ArrowRight','ArrowLeft','ArrowUp','ArrowDown','Enter',' '].includes(e.key))return;e.preventDefault();if(e.key==='Enter'||e.key===' '){if(tutKey<0)tutKey=0;else{const a=live[tutKey%live.length];tutKey=-1;activateTut(a)}}else tutKey=(tutKey<0?0:(tutKey+(e.key==='ArrowLeft'||e.key==='ArrowUp'?-1:1)+live.length)%live.length);if(tutKey>=0){$id('aeTutBoardStatus').textContent='Selected arrow '+(tutKey+1)+' of '+live.length+'. Enter to attempt escape.';drawTut(performance.now())}});
+  tb.addEventListener('blur',()=>{tutKey=-1;if(tutOpen&&!anim)drawTut(performance.now())});
   $id('aeTutArrowHint').onclick=()=>{tutorialHint=!tutorialHint;$id('aeTutArrowHint').setAttribute('aria-pressed',String(tutorialHint));if(!anim)drawTut(performance.now());};
   $id('aeTutGridHint').onclick=()=>{tutorialGrid=!tutorialGrid;$id('aeTutGridHint').setAttribute('aria-pressed',String(tutorialGrid));if(!anim)drawTut(performance.now());};
   function openTutorial(thenPlay) {
-    tutorialGrid=tutorialHint=false;for(const id of ['aeTutArrowHint','aeTutGridHint'])$id(id).setAttribute('aria-pressed','false');
+    tutTap.cancel();tutKey=-1;tutorialGrid=tutorialHint=false;for(const id of ['aeTutArrowHint','aeTutGridHint'])$id(id).setAttribute('aria-pressed','false');
     tutThenPlay = thenPlay; tutOpen = true;
     live = PUZZLE.map((a, i) => ({ ...a, i })); anim = null; flash = null; cleared = 0;
     tut.hidden = false;
     $id('aeTutGo').hidden = false;$id('aeTutGo').textContent='Play real game';
     $id('aeTutStep').textContent = 'HOW TO PLAY';
-    setText('Tap an arrow', 'Each arrow slides out the way its head points. Tap one whose path to the edge is clear.');
+    setText('Tap an arrow', 'Each arrow slides out the way its head points. Tap directly on one whose exit is clear, then release.');
     sizeBoard(); drawTut(performance.now());
   }
   function closeTutorial(done) {
-    tutOpen = false; tut.hidden = true; cancelAnimationFrame(tutRaf);
+    tutTap.cancel();tutKey=-1;tutOpen = false; tut.hidden = true; cancelAnimationFrame(tutRaf);
     if (done) store.set('ae-tutorial-done', '1');
     refreshMenu();
     if (tutThenPlay) hideTitle();
