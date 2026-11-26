@@ -202,19 +202,20 @@
 
   function progressText() {
     try {
+      if (S.mode === 'timed') return S.timed?.finished?'Competition finished':'Timed competition · '+S.competitionMinutes+' min';
       if (S.mode === 'daily') return 'Daily challenge';
       if (S.mode === 'custom') return 'Custom puzzle';
-      return S.format === 2 ? 'Level ' + S.level + ' of ' + S.totalLevels + ' · ' + tierName(S.tier) : 'Level ' + S.level;
+      return 'Level ' + S.level + ' · ' + tierName(S.tier);
     } catch { return ''; }
   }
   function refreshMenu() {
     const firstTime = !store.get('ae-tutorial-done');
     $id('aePlayLabel').textContent = firstTime ? 'Start' : 'Continue';
-    $id('aeProgress').textContent = firstTime ? 'Quick tutorial first' : progressText();
+    $id('aeProgress').textContent = firstTime ? 'Tutorial or optional practice' : progressText();
   }
 
   function showTitle(intro) {
-    titleOpen = true;
+    titleOpen = true; window.AE_titlePaused=true;
     try { pauseClock(); } catch {}
     shell.hidden = false; shell.classList.remove('ae-out');
     resizeBg(); refreshMenu();
@@ -232,7 +233,7 @@
     lastSpawn = performance.now() - 800;
   }
   function hideTitle() {
-    titleOpen = false;
+    titleOpen = false; window.AE_titlePaused=false;
     shell.classList.add('ae-out');
     setTimeout(() => { if (!titleOpen) { shell.hidden = true; stopBg(); } }, 260);
     try { resumeClock(); } catch {}
@@ -269,7 +270,7 @@
 <h2 id="aeTutHead">Tap an arrow</h2>
 <canvas id="aeTutBoard"></canvas>
 <p id="aeTutText"></p><div class="ae-hint-cards"><button type="button" class="ae-hint-card" id="aeTutArrowHint" aria-pressed="false"><b>💡 Arrow hint</b><span>Highlights an arrow that can escape now. Try it!</span></button><button type="button" class="ae-hint-card" id="aeTutGridHint" aria-pressed="false"><b># Grid hint</b><span>Shows faint lines from arrowheads so you can trace their exits.</span></button></div><div class="ae-hint-note">Tutorial hints are free. Enable unlimited hints in Settings for the real game.</div>
-<div class="ae-row"><button class="ae-go" id="aeTutGo" hidden>Start playing</button></div>`;
+<div class="ae-row"><button class="ae-go" id="aeTutGo">Play real game</button><button id="aePractice" type="button">Practice levels</button></div>`;
   document.body.appendChild(tut);
 
   const tb = $id('aeTutBoard'), tg = tb.getContext('2d');
@@ -351,7 +352,7 @@
       setText('You’ve got it!',
         'Clear every arrow to finish a level. You have 3 lives ♥. Use the two hint buttons below when stuck. Pinch inward to shrink the puzzle and outward to zoom in.');
       $id('aeTutGo').hidden = false;
-      $id('aeTutGo').textContent = tutThenPlay ? 'Start playing' : 'Done';
+      $id('aeTutGo').textContent = 'Play real game';
     } else if (cleared === 1) {
       setText('Nice escape!', 'Moving one arrow often clears the way for another. Keep going.');
     } else {
@@ -393,7 +394,7 @@
     tutThenPlay = thenPlay; tutOpen = true;
     live = PUZZLE.map((a, i) => ({ ...a, i })); anim = null; flash = null; cleared = 0;
     tut.hidden = false;
-    $id('aeTutGo').hidden = true;
+    $id('aeTutGo').hidden = false;$id('aeTutGo').textContent='Play real game';
     $id('aeTutStep').textContent = 'HOW TO PLAY';
     setText('Tap an arrow', 'Each arrow slides out the way its head points. Tap one whose path to the edge is clear.');
     sizeBoard(); drawTut(performance.now());
@@ -404,7 +405,8 @@
     refreshMenu();
     if (tutThenPlay) hideTitle();
   }
-  $id('aeTutGo').onclick = () => closeTutorial(true);
+  $id('aeTutGo').onclick = () => {tutThenPlay=true;closeTutorial(true);};
+  $id('aePractice').onclick=()=>{if(startPractice()){tutThenPlay=true;closeTutorial(true);}};
   $id('aeTutSkip').onclick = () => closeTutorial(true);
   addEventListener('resize', () => { if (tutOpen) { sizeBoard(); drawTut(performance.now()); } });
 
@@ -412,6 +414,7 @@
   const prevBack = window.AE_back;
   window.AE_back = function () {
     if (tutOpen) { tutThenPlay = false; closeTutorial(false); return true; }
+    if (S.mode==='training'){endPractice();return true;}
     if (document.querySelector('dialog[open]')) return prevBack ? prevBack() : false;
     if (titleOpen) return false; // on the title screen, Back leaves the app
     if (prevBack && prevBack()) return true;
