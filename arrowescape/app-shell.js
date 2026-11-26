@@ -386,8 +386,8 @@
     cancelAnimationFrame(tutRaf); tutRaf = requestAnimationFrame(drawTut);
   });
 
-  $id('aeTutArrowHint').onclick=()=>{tutorialHint=!tutorialHint;$id('aeTutArrowHint').setAttribute('aria-pressed',String(tutorialHint));drawTut(performance.now());};
-  $id('aeTutGridHint').onclick=()=>{tutorialGrid=!tutorialGrid;$id('aeTutGridHint').setAttribute('aria-pressed',String(tutorialGrid));drawTut(performance.now());};
+  $id('aeTutArrowHint').onclick=()=>{tutorialHint=!tutorialHint;$id('aeTutArrowHint').setAttribute('aria-pressed',String(tutorialHint));if(!anim)drawTut(performance.now());};
+  $id('aeTutGridHint').onclick=()=>{tutorialGrid=!tutorialGrid;$id('aeTutGridHint').setAttribute('aria-pressed',String(tutorialGrid));if(!anim)drawTut(performance.now());};
   function openTutorial(thenPlay) {
     tutorialGrid=tutorialHint=false;for(const id of ['aeTutArrowHint','aeTutGridHint'])$id(id).setAttribute('aria-pressed','false');
     tutThenPlay = thenPlay; tutOpen = true;
