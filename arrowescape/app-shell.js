@@ -51,6 +51,12 @@
   align-items:center;justify-content:center;gap:14px;padding:24px;font-family:system-ui,sans-serif;
   -webkit-user-select:none;user-select:none}
 #aeTut[hidden]{display:none}
+#aeTut{overflow:auto;justify-content:safe center;padding-top:54px;padding-bottom:18px}
+#aeTutBoard{flex:none;max-height:32dvh;max-width:32dvh}
+.ae-hint-cards{width:min(90vw,380px);display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#aeTut .ae-hint-card{display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:9px 10px;gap:4px;font-size:12px;line-height:1.3;background:#ffffff12;border:1px solid #ffffff25}
+.ae-hint-card b{font-size:13px;color:#fff}.ae-hint-card span{font-weight:400;color:#dfe6f7}#aeTut .ae-hint-card[aria-pressed=true]{border-color:#58d6a3;background:#58d6a326}
+.ae-hint-note{font-size:11px;color:#c8d2ea;text-align:center;max-width:380px}
 #aeTut h2{margin:0;font-size:26px;text-align:center;color:#ffffff}
 #aeTut p{margin:0;max-width:340px;text-align:center;font-size:15px;line-height:1.5;min-height:3.5em;color:#dfe6f7}
 #aeTutBoard{width:min(78vw,300px);height:min(78vw,300px);border-radius:18px;background:#2f3a5c;touch-action:none;
@@ -262,7 +268,7 @@
 <div class="ae-tut-step" id="aeTutStep">HOW TO PLAY</div>
 <h2 id="aeTutHead">Tap an arrow</h2>
 <canvas id="aeTutBoard"></canvas>
-<p id="aeTutText"></p>
+<p id="aeTutText"></p><div class="ae-hint-cards"><button type="button" class="ae-hint-card" id="aeTutArrowHint" aria-pressed="false"><b>💡 Arrow hint</b><span>Highlights an arrow that can escape now. Try it!</span></button><button type="button" class="ae-hint-card" id="aeTutGridHint" aria-pressed="false"><b># Grid hint</b><span>Shows faint lines from arrowheads so you can trace their exits.</span></button></div><div class="ae-hint-note">Tutorial hints are free. Enable unlimited hints in Settings for the real game.</div>
 <div class="ae-row"><button class="ae-go" id="aeTutGo" hidden>Start playing</button></div>`;
   document.body.appendChild(tut);
 
@@ -274,6 +280,7 @@
     { p: [[0, 4], [1, 4], [1, 3]], v: [0, -1] },
     { p: [[4, 4], [3, 4], [2, 4], [2, 3]], v: [0, -1] },
   ];
+  let tutorialGrid=false,tutorialHint=false;
   let tutOpen = false, tutThenPlay = false, live = [], anim = null, flash = null, cleared = 0, tutRaf = 0;
 
   function tutColor(a, i) {
@@ -320,10 +327,12 @@
     tg.clearRect(0, 0, s, s);
     tg.fillStyle = '#ffffff30';
     for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) { tg.beginPath(); tg.arc((x + .5) * k, (y + .5) * k, 2, 0, 7); tg.fill(); }
+    if(tutorialGrid){tg.strokeStyle='#9cd9ef65';tg.lineWidth=1;for(const a of live){const p=toPx(a.p.at(-1));tg.beginPath();tg.moveTo(p[0]-a.v[0]*s*2,p[1]-a.v[1]*s*2);tg.lineTo(p[0]+a.v[0]*s*2,p[1]+a.v[1]*s*2);tg.stroke();}}
+    const suggested=tutorialHint?live.find(a=>!blockersOf(a)):null;
     for (const a of live) {
       if (anim && anim.a === a) continue;
       const red = flash && flash.a === a && now < flash.end;
-      drawArrowPx(a.p.map(toPx), red ? '#e53946' : tutColor(a, a.i), w);
+      drawArrowPx(a.p.map(toPx), red ? '#e53946' : a===suggested ? '#f7aaff' : tutColor(a, a.i), w);
     }
     if (anim) {
       const prog = Math.min(1, (now - anim.start) / 420), tr = trailPx(anim.a, 0);
@@ -340,7 +349,7 @@
     if (!live.length) {
       $id('aeTutStep').textContent = 'ALL CLEAR';
       setText('You’ve got it!',
-        'Clear every arrow to finish a level. You have 3 lives ♥. Stuck? 💡 shows an arrow that can escape, and # draws guide lines. Pinch to zoom on big boards.');
+        'Clear every arrow to finish a level. You have 3 lives ♥. Use the two hint buttons below when stuck. Pinch inward to shrink the puzzle and outward to zoom in.');
       $id('aeTutGo').hidden = false;
       $id('aeTutGo').textContent = tutThenPlay ? 'Start playing' : 'Done';
     } else if (cleared === 1) {
@@ -377,7 +386,10 @@
     cancelAnimationFrame(tutRaf); tutRaf = requestAnimationFrame(drawTut);
   });
 
+  $id('aeTutArrowHint').onclick=()=>{tutorialHint=!tutorialHint;$id('aeTutArrowHint').setAttribute('aria-pressed',String(tutorialHint));drawTut(performance.now());};
+  $id('aeTutGridHint').onclick=()=>{tutorialGrid=!tutorialGrid;$id('aeTutGridHint').setAttribute('aria-pressed',String(tutorialGrid));drawTut(performance.now());};
   function openTutorial(thenPlay) {
+    tutorialGrid=tutorialHint=false;for(const id of ['aeTutArrowHint','aeTutGridHint'])$id(id).setAttribute('aria-pressed','false');
     tutThenPlay = thenPlay; tutOpen = true;
     live = PUZZLE.map((a, i) => ({ ...a, i })); anim = null; flash = null; cleared = 0;
     tut.hidden = false;
