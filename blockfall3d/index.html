@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101a24"><meta name="description" content="A new dimension in falling blocks. Move, turn and drop cubes through a true 3D well. Play free, online or offline.">
+<title>Blockfall 3D · A new dimension</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app">
+ <header class="topbar"><a class="wordmark" href="./" aria-label="Blockfall 3D home"><span class="brand-icon" aria-hidden="true">▧</span> BLOCKFALL <b>3D</b></a><div class="header-actions"><span class="local-tag">PLAY IN A NEW DIMENSION</span><button id="soundToggle" class="icon-btn" aria-label="Mute sound" title="Sound">♪</button><button id="helpButton" class="icon-btn" aria-label="How to play" title="How to play">?</button><button id="settingsButton" class="icon-btn" aria-label="Settings" title="Settings">☰</button></div></header>
+ <section class="game-layout">
+  <aside class="sidebar left-sidebar">
+   <div class="section-kicker"><span class="live-dot"></span> THE LONG GAME</div>
+   <div class="score-block"><span class="label">SCORE</span><strong id="score">000000</strong><span class="record-label">PERSONAL BEST <b id="best">0</b></span></div>
+   <div class="stats-grid"><div><span class="label">LEVEL</span><strong id="level">01</strong></div><div><span class="label">LAYERS</span><strong id="layers">00</strong></div></div>
+   <div class="level-track"><i id="levelProgress"></i></div><p class="muted small" id="levelHint">5 layers to the next level</p>
+   <div class="held-section"><div class="section-heading"><span class="label">HOLD</span><kbd>SHIFT</kbd></div><canvas id="heldPreview" width="220" height="100" aria-label="Held piece: empty"></canvas><button id="holdButton" class="text-button" data-action="hold">Hold piece <span>↔</span></button></div>
+   <div class="run-info"><span class="label" id="modeLabel">ENDLESS</span><p id="seedLabel">orbit</p><span class="muted small" id="difficultyLabel">Starting difficulty 3 / 10</span><p class="muted small">RUN TIME <b id="time">0:00</b></p></div>
+  </aside>
+  <section class="board-panel" aria-label="3D playing area">
+   <div class="board-top"><span><i class="live-dot"></i> <span id="stateLabel">READY WHEN YOU ARE</span></span><div><button id="cameraReset" class="subtle-button" title="Restore camera">↺ View</button><button id="pauseButton" class="subtle-button" disabled>Ⅱ Pause</button></div></div>
+   <div id="scene" tabindex="0" role="application" aria-label="3D block well. Arrow keys move; Q E, A D, Z C rotate; Space drops; Shift holds; P pauses." aria-describedby="keyboardHelp"></div>
+   <div class="mobile-next"><span>NEXT</span><canvas id="mobileNext" width="240" height="70" aria-label="Next three pieces"></canvas></div>
+   <div class="mobile-map"><span>LANDING MAP</span><canvas id="mobileMap" width="180" height="180" aria-label="Top view of your landing position"></canvas></div>
+   <div id="renderError" hidden><h2>3D graphics are unavailable</h2><p>Try an up-to-date browser with hardware acceleration enabled. Your saved progress stays safe.</p><button onclick="location.reload()">Try again</button></div>
+   <div class="board-caption"><span>5 × 5 × 12 WELL</span><span>DRAG TO ORBIT · PINCH TO ZOOM</span></div>
+   <div id="overlay" class="overlay"><div class="overlay-card"><span class="eyebrow" id="overlayEyebrow">A NEW DIMENSION</span><h1 id="overlayTitle">Think outside<br>the grid.</h1><p id="overlayText">Move in three dimensions.<br>Fill a layer. Make some space.</p><button id="playButton" class="primary-button">Let’s play <span>↗</span></button><button id="overlaySecondary" class="text-button">How to play</button><span class="overlay-note" id="overlayNote">No download. No account. Just one more layer.</span></div></div>
+   <div id="toast" role="status" aria-live="polite"></div>
+  </section>
+  <aside class="sidebar right-sidebar">
+   <div class="section-heading"><span class="label">UP NEXT</span><span class="small muted">3 PIECES</span></div>
+   <canvas id="nextPreview" width="220" height="270" aria-label="Next three pieces"></canvas>
+   <div class="map-section"><div class="section-heading"><span class="label">LANDING MAP</span><span class="small muted">TOP VIEW</span></div><canvas id="topMap" width="200" height="200" aria-label="Top view of the well and landing footprint"></canvas><p class="muted small">Outlined cubes show where you’ll land. Numbers show stack height.</p></div>
+   <div class="legend"><span><i class="legend-dot active-dot"></i> Your piece</span><span><i class="legend-dot ghost-dot"></i> Landing preview</span></div>
+  </aside>
+ </section>
+ <section class="control-bar" aria-label="Game controls">
+  <div class="move-controls"><span class="control-label">MOVE</span><div class="dpad"><button data-action="back" class="pad-up" aria-label="Move backward">↑</button><button data-action="left" class="pad-left" aria-label="Move left">←</button><button data-action="forward" class="pad-down" aria-label="Move forward">↓</button><button data-action="right" class="pad-right" aria-label="Move right">→</button></div></div>
+  <div class="rotate-controls"><span class="control-label">ROTATE</span><div class="axis-buttons" role="group" aria-label="Rotation axis"><button data-axis="x" aria-pressed="false">X</button><button data-axis="y" aria-pressed="true">Y</button><button data-axis="z" aria-pressed="false">Z</button></div><div class="turn-buttons"><button data-action="counter" aria-label="Rotate counterclockwise">↶</button><button data-action="clockwise" aria-label="Rotate clockwise">↷</button></div></div>
+  <div class="drop-controls"><button class="soft-button" data-action="soft">Soft drop <span>↓</span></button><button class="drop-button" data-action="drop">DROP <span>↓</span></button><button class="mobile-hold" data-action="hold">Hold ↔</button></div>
+  <div class="keyboard-legend" id="keyboardHelp"><p><kbd>↑ ↓ ← →</kbd> move <span>·</span> <kbd>Q E / A D / Z C</kbd> rotate</p><p><kbd>SPACE</kbd> drop <span>·</span> <kbd>SHIFT</kbd> hold <span>·</span> <kbd>P</kbd> pause</p></div>
+ </section>
+ <footer><span>A LITTLE SPACE. A LOT OF POSSIBILITIES.</span><span>J JUST JAY STUDIOS <i>✦</i></span></footer>
+</main>
+<dialog id="settings" aria-labelledby="settingsTitle"><div class="dialog-head"><span class="eyebrow">MAKE IT YOURS</span><h2 id="settingsTitle">Game settings</h2></div><div class="dialog-body">
+ <label>Game mode<select id="modeInput"><option value="endless">Endless · a fresh sequence each run</option><option value="seeded">Seeded challenge · repeat or share a sequence</option></select></label>
+ <label id="seedField">Seed word<input id="seedInput" maxlength="100" autocomplete="off" autocapitalize="off" placeholder="e.g. orbit"><span class="helper">Same seed and difficulty. Same sequence.</span></label>
+ <label for="difficultyInput">Starting difficulty <output id="difficultyOutput" for="difficultyInput">3 / 10</output><input id="difficultyInput" type="range" min="1" max="10" value="3"><span class="range-labels"><span>Room to think</span><span>Think fast</span></span></label>
+ <label class="check-label"><input id="soundInput" type="checkbox">Sound effects</label><label class="check-label"><input id="motionInput" type="checkbox">Reduce motion</label>
+ <p class="helper">Mode, seed and difficulty apply when you start a new run. Sound and motion apply when you save settings.</p>
+ <details><summary>Records &amp; history</summary><div id="historyList"></div></details>
+ <details><summary>Save &amp; reset</summary><div class="button-row"><button id="exportButton">Export save</button><button id="importButton">Import save</button></div><input id="importFile" type="file" accept="application/json,.json" hidden><button id="restartButton" class="wide-button">Restart current run</button><p class="helper">Start this sequence again. Records and settings stay.</p><button id="resetButton" class="danger-button">Reset everything</button><p class="helper">Erase Blockfall 3D games, settings, records and history in this browser. Export a backup first.</p></details>
+ <button id="shareButton" class="wide-button">Share this challenge ↗</button><p id="settingsFeedback" role="status"></p>
+ </div><div class="dialog-footer"><button id="cancelSettings">Cancel</button><button id="saveSettings">Save settings</button><button id="newRunButton" class="primary-button">New run ↗</button></div></dialog>
+<dialog id="help" aria-labelledby="helpTitle"><div class="dialog-head"><span class="eyebrow">A DIFFERENT WAY TO DROP</span><h2 id="helpTitle">Make room in 3D.</h2></div><div class="dialog-body help-body"><div class="help-step"><b>01</b><div><h3>Find your space.</h3><p>Move your piece left, right, forward and backward through a 5 × 5 well. Drag the well to look around; the floor’s X and Z arrows keep you oriented.</p></div></div><div class="help-step"><b>02</b><div><h3>Turn things around.</h3><p>Select an axis and turn in either direction. X and Z tip your piece; Y spins it flat. Lower a piece a little if the ceiling prevents a turn.</p></div></div><div class="help-step"><b>03</b><div><h3>Clear an entire layer.</h3><p>Fill all 25 spaces in a horizontal layer to clear it. The layers above move down. The ghost and top-down map show where your piece will land.</p></div></div><p>You can hold one piece each turn. Soft drop lowers it one cell; Drop sends it straight to its landing position. The game ends when a new piece has no room to appear.</p><p>Clear five layers to level up. Layers score 100 / 300 / 500 / 800 points for one / two / three / four at once, multiplied by your level. Soft drops earn 1 point per cell; hard drops earn 2.</p><p>Keyboard: arrows move; Q/E turn X, A/D turn Y, Z/C turn Z. Space drops, Shift holds, Enter starts or resumes, P pauses. Hold B to soft-drop.</p><p class="helper">Leaving the page pauses the game. Saved games always reopen paused. Camera movement never moves a piece.</p></div><div class="dialog-footer"><button id="closeHelp" class="primary-button">Got it ↗</button></div></dialog>
+<dialog id="shareDialog" aria-labelledby="shareTitle"><div class="dialog-head"><h2 id="shareTitle">Send a little challenge.</h2></div><div class="dialog-body"><label>Challenge link<textarea id="shareText" readonly rows="4"></textarea></label><p id="shareFeedback" role="status">Copy this link and send it to a friend.</p></div><div class="dialog-footer"><button id="closeShare">Close</button><button id="copyShare" class="primary-button">Copy link</button></div></dialog>
+<dialog id="confirmDialog" aria-labelledby="confirmTitle" aria-describedby="confirmMessage"><div class="dialog-head"><span class="eyebrow">BEFORE YOU CONTINUE</span><h2 id="confirmTitle">Make this change?</h2></div><div class="dialog-body"><p id="confirmMessage"></p></div><div class="dialog-footer"><button id="confirmCancel" autofocus>Keep current game</button><button id="confirmAccept" class="primary-button">Confirm change</button></div></dialog>
+<div id="storageNotice" hidden role="alert"></div><div class="sr-only" id="announce" aria-live="polite"></div>
+<script src="vendor/three.min.js"></script><script type="module" src="app.mjs"></script>
+</body></html>
